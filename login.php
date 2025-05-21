@@ -9,7 +9,7 @@ if (isset($_SESSION['user_id'])) {
         header('Location: admin/admin_users.php');
     } else {
         // For staff, redirect to a hypothetical dashboard or show a simple message
-         // header('Location: dashboard.php'); // Example redirection
+         header('Location: view_quotations.php'); // Example redirection
          echo "<p>Welcome, " . htmlspecialchars($_SESSION['username']) . "! You are already logged in.</p>";
          echo '<p><a href="logout.php">Logout</a></p>';
     }
