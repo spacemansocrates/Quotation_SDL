@@ -5,7 +5,7 @@ session_start();
 // Adjust paths if this file is not in the web root alongside includes/ and css/
 require_once __DIR__ . '/../includes/time_formating_helper.php'; // Add this for time formatting functions
 require_once __DIR__ . '/../includes/db_connect.php';
-require_once __DIR__ . '/../includes/nav.php';
+
 
 // --- Authorization Check ---
 $allowed_roles = ['admin', 'manager', 'supervisor']; // Roles allowed to perform actions
@@ -263,6 +263,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
+require_once __DIR__ . '/../includes/nav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

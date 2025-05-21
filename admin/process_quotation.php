@@ -1,5 +1,7 @@
 <?php
 // process_quotation.php
+session_start(); // <------------------------------------------------- ADD THIS
+
 header('Content-Type: application/json');
 
 // Database connection
@@ -50,21 +52,23 @@ try {
     $conn->beginTransaction();
 
     // --- 1. Retrieve and Validate Basic Data ---
-    $shop_ids = isset($_POST['shops']) ? (array)$_POST['shops'] : []; // Array of shop IDs
+    $shop_ids = isset($_POST['shops']) ? (array)$_POST['shops'] : [];
     $customer_id = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT);
     $quotation_date = filter_input(INPUT_POST, 'quotation_date', FILTER_SANITIZE_STRING);
     $company_tpin = filter_input(INPUT_POST, 'company_tpin', FILTER_SANITIZE_STRING);
 
-    // User ID - Assuming you have a session or other way to get this
-    $created_by_user_id = 1; // Replace with actual logged-in user ID
-    $updated_by_user_id = $created_by_user_id;
+    // --- User ID - Retrieve from session ---
+    if (!isset($_SESSION['user_id'])) { // <------------------------ CHANGE THIS SECTION
+        // If user_id is not set in session, the user is not logged in properly.
+        throw new Exception("User not authenticated. Please log in.");
+    }
+    $created_by_user_id = $_SESSION['user_id']; // Use the actual logged-in user's ID
+    $updated_by_user_id = $created_by_user_id;  // On creation, updated_by is same as created_by
+    // --- End User ID ---
 
     if (empty($shop_ids) || !$customer_id || empty($quotation_date)) {
         throw new Exception("Shop, Customer, or Quotation Date is missing.");
     }
-    // For simplicity, we'll associate the quotation with the *first* shop selected if multiple are chosen for the main `shop_id` field.
-    // If you need to link a quotation to *multiple* shops, you'd need a pivot table (e.g., quotation_shops).
-    // For this example, we'll use the first selected shop for `shop_id` in the `quotations` table.
     $main_shop_id = $shop_ids[0];
 
 
@@ -147,67 +151,112 @@ try {
     // You'll need a `quotation_items` table:
     // quotation_id (FK), product_id (FK), item_name (if overridden or for historical record),
     // quantity, unit_price, unit_of_measurement, total_price, item_image_path (optional)
+$sql_item = "INSERT INTO quotation_items (
+                quotation_id,
+                product_id,
+                item_number,
+                description,
+                image_path_override,
+                quantity,
+                unit_of_measurement, -- This should be the ID from your units_of_measurement table
+                rate_per_unit,
+                total_amount,
+                created_at,
+                updated_at,
+                created_by_user_id,
+                updated_by_user_id
+             ) VALUES (
+                :quotation_id,
+                :product_id,
+                :item_number,
+                :description,
+                :image_path_override,
+                :quantity,
+                :unit_of_measurement_id, -- Placeholder for the ID
+                :rate_per_unit,
+                :total_amount,
+                NOW(),
+                NOW(),
+                :created_by_user_id,
+                :updated_by_user_id
+             )";
+$stmt_item = $conn->prepare($sql_item);
 
-    $sql_item = "INSERT INTO quotation_items (
-                    quotation_id, product_id, item_name, item_description, quantity, unit_of_measurement,
-                    unit_price, total_price, item_image_path
-                 ) VALUES (
-                    :quotation_id, :product_id, :item_name, :item_description, :quantity, :unit_of_measurement,
-                    :unit_price, :total_price, :item_image_path
-                 )";
-    $stmt_item = $conn->prepare($sql_item);
+$item_product_ids = isset($_POST['product_id']) ? $_POST['product_id'] : [];
+$item_names_from_form = isset($_POST['item_name']) ? $_POST['item_name'] : []; // Original product name, can be stored in description or if you add a field for it.
+$item_descriptions_from_form = isset($_POST['item_description']) ? $_POST['item_description'] : [];
+$item_quantities = isset($_POST['item_quantity']) ? $_POST['item_quantity'] : [];
+$item_uom_ids_from_form = isset($_POST['item_uom']) ? $_POST['item_uom'] : []; // IMPORTANT: This should ideally be the ID from units_of_measurement table
+$item_unit_prices = isset($_POST['item_unit_price']) ? $_POST['item_unit_price'] : [];
 
-    $item_product_ids = $_POST['product_id']; // Array
-    $item_names = $_POST['item_name'];         // Array
-    $item_descriptions = $_POST['item_description']; // Array
-    $item_quantities = $_POST['item_quantity']; // Array
-    $item_uoms = $_POST['item_uom'];           // Array
-    $item_unit_prices = $_POST['item_unit_price']; // Array
-    // item_total is calculated, not directly taken
+// Handle image uploads for items
+$item_image_uploads = isset($_FILES['item_image_upload']) ? $_FILES['item_image_upload'] : null;
+$item_number_counter = 0; // Initialize item number for this quotation
 
-    // Handle image uploads for items
-    $item_image_uploads = isset($_FILES['item_image_upload']) ? $_FILES['item_image_upload'] : null;
-
-
-    for ($i = 0; $i < count($item_product_ids); $i++) {
-        if (empty($item_product_ids[$i])) continue; // Skip if no product ID (e.g., empty row)
-
-        $product_id = filter_var($item_product_ids[$i], FILTER_VALIDATE_INT);
-        $item_name = filter_var($item_names[$i], FILTER_SANITIZE_STRING);
-        $item_description = filter_var($item_descriptions[$i], FILTER_SANITIZE_STRING);
-        $quantity = filter_var($item_quantities[$i], FILTER_VALIDATE_FLOAT);
-        $uom = filter_var($item_uoms[$i], FILTER_SANITIZE_STRING);
-        $unit_price = filter_var($item_unit_prices[$i], FILTER_VALIDATE_FLOAT);
-        $total_price = $quantity * $unit_price;
-
-        $uploaded_image_path = null;
-        if ($item_image_uploads && isset($item_image_uploads['tmp_name'][$i]) && $item_image_uploads['error'][$i] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/quotation_items/'; // Create this directory and make it writable
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = $quotation_id . '_' . $product_id . '_' . time() . '_' . basename($item_image_uploads['name'][$i]);
-            $uploaded_image_path = $upload_dir . $filename;
-            if (!move_uploaded_file($item_image_uploads['tmp_name'][$i], $uploaded_image_path)) {
-                // Handle upload error, maybe log it but don't stop the whole process unless critical
-                $uploaded_image_path = null; // Reset if upload failed
-            }
-        }
-
-
-        $stmt_item->execute([
-            ':quotation_id' => $quotation_id,
-            ':product_id' => $product_id,
-            ':item_name' => $item_name, // Store the name used at the time of quotation
-            ':item_description' => $item_description,
-            ':quantity' => $quantity,
-            ':unit_of_measurement' => $uom,
-            ':unit_price' => $unit_price,
-            ':total_price' => $total_price,
-            ':item_image_path' => $uploaded_image_path
-        ]);
+for ($i = 0; $i < count($item_product_ids); $i++) {
+    if (empty($item_product_ids[$i]) && empty($item_descriptions_from_form[$i])) { // Skip if no product ID and no manual description
+        continue; // Skip potentially empty rows if item adding is very dynamic
     }
 
+    $item_number_counter++; // Increment item number
+
+    // Sanitize and validate inputs for each item
+    $product_id = !empty($item_product_ids[$i]) ? filter_var($item_product_ids[$i], FILTER_VALIDATE_INT) : null;
+
+    // Use the specific item description entered, fallback to product name if description field was left linked to product's default
+    $description = filter_var($item_descriptions_from_form[$i], FILTER_SANITIZE_STRING);
+    if (empty($description) && $product_id && !empty($item_names_from_form[$i])) { // If no override description, use product name
+         $description = filter_var($item_names_from_form[$i], FILTER_SANITIZE_STRING);
+    }
+
+    $quantity = filter_var($item_quantities[$i], FILTER_VALIDATE_FLOAT);
+    // IMPORTANT: If item_uom_ids_from_form[$i] is not already an ID, you need to fetch it here.
+    // For example, if it's a code like 'PCS', you'd do:
+    // $uom_code = filter_var($item_uom_ids_from_form[$i], FILTER_SANITIZE_STRING);
+    // $stmt_uom = $conn->prepare("SELECT id FROM units_of_measurement WHERE code = ?");
+    // $stmt_uom->execute([$uom_code]);
+    // $unit_of_measurement_id = $stmt_uom->fetchColumn();
+    // If it's directly the ID from a select dropdown:
+    $unit_of_measurement_id = !empty($item_uom_ids_from_form[$i]) ? filter_var($item_uom_ids_from_form[$i], FILTER_VALIDATE_INT) : null;
+
+    $rate_per_unit = filter_var($item_unit_prices[$i], FILTER_VALIDATE_FLOAT);
+    $total_amount = $quantity * $rate_per_unit;
+
+    $uploaded_image_path_override = null;
+    if ($item_image_uploads && isset($item_image_uploads['tmp_name'][$i]) && $item_image_uploads['error'][$i] === UPLOAD_ERR_OK) {
+        $upload_dir = 'uploads/quotation_item_images/'; // Create this directory and make it writable
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0775, true); // Use 0775 for better security if possible
+        }
+        // Sanitize filename, make it unique
+        $original_filename = basename($item_image_uploads['name'][$i]);
+        $safe_filename = preg_replace("/[^A-Za-z0-9._-]/", "", $original_filename); // Basic sanitization
+        $extension = pathinfo($safe_filename, PATHINFO_EXTENSION);
+        $filename_no_ext = pathinfo($safe_filename, PATHINFO_FILENAME);
+        $final_filename = $quotation_id . '_' . $item_number_counter . '_' . time() . '_' . $filename_no_ext . '.' . $extension;
+        $uploaded_image_path_override = $upload_dir . $final_filename;
+
+        if (!move_uploaded_file($item_image_uploads['tmp_name'][$i], $uploaded_image_path_override)) {
+            // Handle upload error, maybe log it but don't stop the whole process unless critical
+            error_log("Failed to upload item image: " . $item_image_uploads['name'][$i] . " for quotation " . $quotation_id);
+            $uploaded_image_path_override = null; // Reset if upload failed
+        }
+    }
+
+    $stmt_item->execute([
+        ':quotation_id' => $quotation_id,
+        ':product_id' => $product_id, // Can be NULL if it's a custom item without a product link
+        ':item_number' => $item_number_counter,
+        ':description' => $description,
+        ':image_path_override' => $uploaded_image_path_override,
+        ':quantity' => $quantity,
+        ':unit_of_measurement_id' => $unit_of_measurement_id,
+        ':rate_per_unit' => $rate_per_unit,
+        ':total_amount' => $total_amount,
+        ':created_by_user_id' => $created_by_user_id,
+        ':updated_by_user_id' => $created_by_user_id // On creation, created_by and updated_by are the same
+    ]);
+}
     // If you have a quotation_shops pivot table for many-to-many relationship:
     // $stmt_quot_shop = $conn->prepare("INSERT INTO quotation_shops (quotation_id, shop_id) VALUES (:quotation_id, :shop_id)");
     // foreach ($shop_ids as $s_id) {

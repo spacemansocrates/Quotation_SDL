@@ -1,251 +1,230 @@
 <?php
-// Start session
-session_start();
+// view_quotation.php
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role'])) {
-    header('Location: login.php'); // Adjust if your login page is elsewhere
-    exit();
+// Start session, include database connection, and any necessary functions/classes
+// session_start(); // If not already started by a global include
+// require_once 'config/db_connect.php'; // Your database connection
+// require_once 'includes/functions.php'; // Optional helper functions
+
+// Check if user is logged in and has permission (optional, but good practice)
+// if (!isUserLoggedIn() || !canUserViewQuotations()) {
+//    header("Location: login.php");
+//    exit;
+// }
+
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    die("Error: Quotation ID is missing."); // Or redirect to admin_quotations.php with an error message
 }
 
-require_once __DIR__ . '/../includes/db_connect.php';
+$quotation_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
-$quotation_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$error_message = '';
+if (!$quotation_id) {
+    die("Error: Invalid Quotation ID."); // Or redirect
+}
+
 $quotation = null;
 $quotation_items = [];
 $customer = null;
 $shop = null;
 $created_by_user = null;
 
-if ($quotation_id <= 0) {
-    $error_message = "Invalid quotation ID.";
-} else {
-    try {
-        $pdo = getDatabaseConnection();
+try {
+    $conn = new PDO("mysql:host=localhost;dbname=supplies", "root", ""); // Replace with your actual connection
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // Fetch quotation details
-        $stmt = DatabaseConfig::executeQuery(
-            $pdo,
-            "SELECT q.*, c.name AS customer_name_db, c.address_line1 AS customer_address_line1, c.city_location AS customer_city, c.phone AS customer_phone, c.email AS customer_email, c.tpin_no AS customer_tpin,
-                    s.name AS shop_name, s.address_line1 AS shop_address_line1, s.address_line2 AS shop_address_line2, s.city AS shop_city, s.country AS shop_country, s.phone AS shop_phone, s.email AS shop_email, s.logo_path AS shop_logo_path, s.tpin_no AS shop_tpin,
-                    u.username AS created_by_username, u.full_name AS created_by_fullname
-             FROM quotations q
-             LEFT JOIN customers c ON q.customer_id = c.id
-             LEFT JOIN shops s ON q.shop_id = s.id
-             LEFT JOIN users u ON q.created_by_user_id = u.id
-             WHERE q.id = :quotation_id",
-            [':quotation_id' => $quotation_id]
-        );
-        $quotation = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Fetch Quotation Details
+    $sql_quotation = "SELECT q.*,
+       c.name AS customer_name, c.customer_code,
+       c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
+       s.name AS shop_name, s.shop_code,
+       u.username AS created_by_username
+FROM quotations q
+LEFT JOIN customers c ON q.customer_id = c.id
+LEFT JOIN shops s ON q.shop_id = s.id
+LEFT JOIN users u ON q.created_by_user_id = u.id
+WHERE q.id = :quotation_id";
 
-        if (!$quotation) {
-            $error_message = "Quotation not found.";
-        } else {
-            // Fetch quotation items
-            $stmt_items = DatabaseConfig::executeQuery(
-                $pdo,
-                "SELECT qi.*, p.name AS product_name, p.sku AS product_sku
-                 FROM quotation_items qi
-                 LEFT JOIN products p ON qi.product_id = p.id
-                 WHERE qi.quotation_id = :quotation_id
-                 ORDER BY qi.item_number ASC",
-                [':quotation_id' => $quotation_id]
-            );
-            $quotation_items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
-        }
+    $stmt_quotation = $conn->prepare($sql_quotation);
+    $stmt_quotation->bindParam(':quotation_id', $quotation_id, PDO::PARAM_INT);
+    $stmt_quotation->execute();
+    $quotation = $stmt_quotation->fetch(PDO::FETCH_ASSOC);
 
-        DatabaseConfig::closeConnection($pdo);
-    } catch (PDOException $e) {
-        error_log("Error in view_quotation.php: " . $e->getMessage());
-        $error_message = "An error occurred while retrieving quotation details.";
+    if (!$quotation) {
+        die("Error: Quotation not found."); // Or redirect
     }
+
+    // Fetch Quotation Items
+    $sql_items = "SELECT qi.*, 
+       p.name as product_name, 
+       p.sku as product_sku, 
+       uom.name as uom_name
+FROM quotation_items qi
+LEFT JOIN products p ON qi.product_id = p.id
+LEFT JOIN units_of_measurement uom ON qi.unit_of_measurement = uom.name
+WHERE qi.quotation_id = :quotation_id
+ORDER BY qi.item_number ASC";
+
+    $stmt_items = $conn->prepare($sql_items);
+    $stmt_items->bindParam(':quotation_id', $quotation_id, PDO::PARAM_INT);
+    $stmt_items->execute();
+    $quotation_items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    // Log error properly for production
+    die("Database error: " . $e->getMessage());
 }
+$conn = null;
+
+// Determine customer name and address to display (considering overrides)
+$display_customer_name = $quotation['customer_name_override'] ?? $quotation['customer_name'];
+$display_customer_address = $quotation['customer_address_override'] ?? $quotation['customer_address_line1'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Quotation - <?php echo htmlspecialchars($quotation['quotation_number'] ?? 'N/A'); ?></title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>View Quotation - <?php echo htmlspecialchars($quotation['quotation_number']); ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
         .quotation-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
-        .quotation-header img { max-height: 80px; margin-bottom: 20px; }
-        .section-title { border-bottom: 2px solid #0d6efd; padding-bottom: 5px; margin-bottom: 15px; font-size: 1.2rem; color: #0d6efd;}
+        .quotation-header h1 { margin-bottom: 0; }
+        .section-title { margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee; }
+        .table th { background-color: #f1f1f1; }
         .totals-table td:first-child { font-weight: bold; text-align: right; }
-        .badge-status { font-size: 1rem; }
-        @media print {
-            body { background-color: #fff; }
-            .no-print { display: none !important; }
-            .quotation-container { box-shadow: none; border: 1px solid #dee2e6; }
-        }
+        .print-button-container { margin-top: 20px; text-align: right; }
     </style>
 </head>
 <body>
-    <?php require_once __DIR__ . '/../includes/nav.php'; ?>
-
-    <div class="container py-4">
-        <?php if ($error_message): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
-            <a href="admin_quotations.php" class="btn btn-secondary no-print">Back to List</a>
-        <?php elseif ($quotation): ?>
-            <div class="quotation-container" id="quotation-to-print">
-                <div class="row mb-3 quotation-header">
-                    <div class="col-md-6">
-                        <?php if (!empty($quotation['shop_logo_path'])): ?>
-                            <img src="../<?php echo htmlspecialchars($quotation['shop_logo_path']); ?>" alt="<?php echo htmlspecialchars($quotation['shop_name']); ?> Logo" class="img-fluid">
-                        <?php endif; ?>
-                        <h5><?php echo htmlspecialchars($quotation['shop_name']); ?></h5>
-                        <p class="mb-0"><?php echo htmlspecialchars($quotation['shop_address_line1']); ?></p>
-                        <?php if (!empty($quotation['shop_address_line2'])): ?>
-                            <p class="mb-0"><?php echo htmlspecialchars($quotation['shop_address_line2']); ?></p>
-                        <?php endif; ?>
-                        <p class="mb-0"><?php echo htmlspecialchars($quotation['shop_city'] . ', ' . $quotation['shop_country']); ?></p>
-                        <p class="mb-0">Phone: <?php echo htmlspecialchars($quotation['shop_phone']); ?></p>
-                        <p class="mb-0">Email: <?php echo htmlspecialchars($quotation['shop_email']); ?></p>
-                        <?php if (!empty($quotation['shop_tpin'])): ?>
-                             <p class="mb-0">TPIN: <?php echo htmlspecialchars($quotation['shop_tpin']); ?></p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <h2>QUOTATION</h2>
-                        <p class="mb-1"><strong>Quotation #:</strong> <?php echo htmlspecialchars($quotation['quotation_number']); ?></p>
-                        <p class="mb-1"><strong>Date:</strong> <?php echo date('d M Y', strtotime($quotation['quotation_date'])); ?></p>
-                        <p class="mb-1"><strong>Status:</strong> 
-                            <span class="badge 
-                                <?php 
-                                    switch ($quotation['status']) {
-                                        case 'Draft': echo 'bg-secondary'; break;
-                                        case 'Submitted': echo 'bg-primary'; break;
-                                        case 'Approved': echo 'bg-success'; break;
-                                        case 'Rejected': echo 'bg-danger'; break;
-                                        default: echo 'bg-info';
-                                    }
-                                ?> badge-status">
-                                <?php echo htmlspecialchars($quotation['status']); ?>
-                            </span>
-                        </p>
-                         <?php if (!empty($quotation['company_tpin'])): ?>
-                             <p class="mb-0">Our TPIN: <?php echo htmlspecialchars($quotation['company_tpin']); ?></p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <hr>
-
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="section-title">Bill To:</h6>
-                        <h5><?php echo htmlspecialchars($quotation['customer_name_override'] ?: $quotation['customer_name_db']); ?></h5>
-                        <p class="mb-0"><?php echo nl2br(htmlspecialchars($quotation['customer_address_override'] ?: ($quotation['customer_address_line1'] . "\n" . $quotation['customer_city']))); ?></p>
-                        <?php if (empty($quotation['customer_name_override'])): // Show DB details if no override ?>
-                            <?php if($quotation['customer_phone']): ?><p class="mb-0">Phone: <?php echo htmlspecialchars($quotation['customer_phone']); ?></p><?php endif; ?>
-                            <?php if($quotation['customer_email']): ?><p class="mb-0">Email: <?php echo htmlspecialchars($quotation['customer_email']); ?></p><?php endif; ?>
-                            <?php if($quotation['customer_tpin']): ?><p class="mb-0">TPIN: <?php echo htmlspecialchars($quotation['customer_tpin']); ?></p><?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <h6 class="section-title">Items:</h6>
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Item / Description</th>
-                                <th>Qty</th>
-                                <th>Unit</th>
-                                <th>Rate</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($quotation_items as $index => $item): ?>
-                            <tr>
-                                <td><?php echo $item['item_number'] ?: ($index + 1); ?></td>
-                                <td>
-                                    <?php echo htmlspecialchars($item['product_name'] ? $item['product_name'] . ($item['product_sku'] ? ' (SKU: '.$item['product_sku'].')' : '') : ''); ?>
-                                    <?php if($item['description']) echo '<br><small>' . nl2br(htmlspecialchars($item['description'])) . '</small>'; ?>
-                                </td>
-                                <td><?php echo htmlspecialchars(number_format($item['quantity'], 2)); ?></td>
-                                <td><?php echo htmlspecialchars($item['unit_of_measurement']); ?></td>
-                                <td><?php echo htmlspecialchars(number_format($item['rate_per_unit'], 2)); ?></td>
-                                <td class="text-end"><?php echo htmlspecialchars(number_format($item['total_amount'], 2)); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <?php if (!empty($quotation['notes_general'])): ?>
-                            <h6 class="section-title">General Notes:</h6>
-                            <p><?php echo nl2br(htmlspecialchars($quotation['notes_general'])); ?></p>
-                        <?php endif; ?>
-                        <?php if (!empty($quotation['mra_wht_note_content'])): ?>
-                            <h6 class="section-title">MRA WHT Note:</h6>
-                            <p><?php echo nl2br(htmlspecialchars($quotation['mra_wht_note_content'])); ?></p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="col-md-6">
-                        <table class="table totals-table">
-                            <tbody>
-                                <tr>
-                                    <td>Gross Total:</td>
-                                    <td class="text-end"><?php echo number_format($quotation['gross_total_amount'], 2); ?></td>
-                                </tr>
-                                <?php if ($quotation['apply_ppda_levy'] && $quotation['ppda_levy_amount'] > 0): ?>
-                                <tr>
-                                    <td>PPDA Levy (<?php echo number_format($quotation['ppda_levy_percentage'], 2); ?>%):</td>
-                                    <td class="text-end"><?php echo number_format($quotation['ppda_levy_amount'], 2); ?></td>
-                                </tr>
-                                <tr>
-                                    <td>Amount Before VAT:</td>
-                                    <td class="text-end"><?php echo number_format($quotation['amount_before_vat'], 2); ?></td>
-                                </tr>
-                                <?php endif; ?>
-                                <tr>
-                                    <td>VAT (<?php echo number_format($quotation['vat_percentage'], 2); ?>%):</td>
-                                    <td class="text-end"><?php echo number_format($quotation['vat_amount'], 2); ?></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Total Net Amount:</strong></td>
-                                    <td class="text-end"><strong><?php echo number_format($quotation['total_net_amount'], 2); ?></strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <hr>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars($quotation['payment_terms']); ?></p>
-                        <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($quotation['delivery_period']); ?></p>
-                        <p><strong>Quotation Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> days from quotation date</p>
-                    </div>
-                     <div class="col-md-6 text-md-end">
-                        <p class="mb-0"><em>Quotation prepared by: <?php echo htmlspecialchars($quotation['created_by_fullname'] ?: $quotation['created_by_username']); ?></em></p>
-                        <p class="mb-0"><small>Generated on: <?php echo date('d M Y H:i:s'); ?></small></p>
-                    </div>
-                </div>
+    <div class="container quotation-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="quotation-header">
+                <h1>Quotation Details</h1>
+                <p class="lead mb-0">Quotation #: <?php echo htmlspecialchars($quotation['quotation_number']); ?></p>
             </div>
-
-            <div class="mt-4 text-center no-print">
-                <a href="admin_quotations.php" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Back to List</a>
-                <a href="edit_quotation.php?id=<?php echo $quotation_id; ?>" class="btn btn-info <?php echo ($quotation['status'] !== 'Draft' && $_SESSION['role'] !== 'admin') ? 'disabled' : ''; ?>">
-                    <i class="bi bi-pencil-square"></i> Edit
-                </a>
-                <a href="print_quotation.php?id=<?php echo $quotation_id; ?>" target="_blank" class="btn btn-success"><i class="bi bi-printer"></i> Print</a>
+            <div>
+                <a href="admin_quotations.php" class="btn btn-outline-secondary">Back to List</a>
+                <a href="print_quotation.php?id=<?php echo $quotation_id; ?>" class="btn btn-primary" target="_blank">Print Quotation</a>
             </div>
+        </div>
 
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="section-title">Customer Information</h5>
+                <p><strong>Name:</strong> <?php echo htmlspecialchars($display_customer_name); ?></p>
+                <p><strong>Address:</strong> <?php echo nl2br(htmlspecialchars($display_customer_address)); ?></p>
+                <p><strong>Customer Code:</strong> <?php echo htmlspecialchars($quotation['customer_code'] ?? 'N/A'); ?></p>
+                <?php if (isset($quotation['customer_email'])): ?>
+                    <p><strong>Email:</strong> <?php echo htmlspecialchars($quotation['customer_email']); ?></p>
+                <?php endif; ?>
+                <?php if (isset($quotation['customer_phone'])): ?>
+                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($quotation['customer_phone']); ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="col-md-6">
+                <h5 class="section-title">Quotation & Company Info</h5>
+                <p><strong>Date:</strong> <?php echo date('F j, Y', strtotime($quotation['quotation_date'])); ?></p>
+                <p><strong>Status:</strong> <span class="badge bg-info"><?php echo htmlspecialchars($quotation['status']); ?></span></p>
+                <p><strong>Shop:</strong> <?php echo htmlspecialchars($quotation['shop_name'] ?? $quotation['shop_code'] ?? 'N/A'); ?></p>
+                <p><strong>Company TPIN:</strong> <?php echo htmlspecialchars($quotation['company_tpin'] ?? 'N/A'); ?></p>
+                <p><strong>Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> days</p>
+                <p><strong>Created By:</strong> <?php echo htmlspecialchars($quotation['created_by_username'] ?? 'N/A'); ?></p>
+            </div>
+        </div>
+
+        <h5 class="section-title">Items</h5>
+        <?php if (empty($quotation_items)): ?>
+            <p>No items found for this quotation.</p>
+        <?php else: ?>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>SKU</th>
+                        <th>Product/Service</th>
+                        <th>Description</th>
+                        <th>Qty</th>
+                        <th>UoM</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($quotation_items as $item): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($item['item_number']); ?></td>
+                            <td><?php echo htmlspecialchars($item['product_sku'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($item['product_name'] ?? 'Custom Item'); ?></td>
+                            <td><?php echo nl2br(htmlspecialchars($item['description'])); ?></td>
+                            <td><?php echo htmlspecialchars(number_format($item['quantity'], 2)); ?></td>
+                            <td><?php echo htmlspecialchars($item['uom_name'] ?? $item['uom_code'] ?? $item['unit_of_measurement'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars(number_format($item['rate_per_unit'], 2)); ?></td>
+                            <td><?php echo htmlspecialchars(number_format($item['total_amount'], 2)); ?></td>
+                        </tr>
+                        <?php if (!empty($item['image_path_override'])): ?>
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <img src="<?php echo htmlspecialchars($item['image_path_override']); ?>" alt="Item Image" style="max-height: 100px; max-width: 150px; margin-top: 5px;">
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
-    </div>
 
+        <div class="row justify-content-end mt-4">
+            <div class="col-md-5">
+                <h5 class="section-title">Summary</h5>
+                <table class="table totals-table">
+                    <tbody>
+                        <tr>
+                            <td>Gross Total:</td>
+                            <td><?php echo number_format($quotation['gross_total_amount'], 2); ?></td>
+                        </tr>
+                        <?php if ($quotation['apply_ppda_levy'] == 1 && isset($quotation['ppda_levy_amount'])): ?>
+                        <tr>
+                            <td>PPDA Levy (<?php echo htmlspecialchars($quotation['ppda_levy_percentage']); ?>%):</td>
+                            <td><?php echo number_format($quotation['ppda_levy_amount'], 2); ?></td>
+                        </tr>
+                        <?php endif; ?>
+                        <tr>
+                            <td>Amount Before VAT:</td>
+                            <td><?php echo number_format($quotation['amount_before_vat'], 2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>VAT (<?php echo htmlspecialchars($quotation['vat_percentage']); ?>%):</td>
+                            <td><?php echo number_format($quotation['vat_amount'], 2); ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Net Amount:</strong></td>
+                            <td><strong><?php echo number_format($quotation['total_net_amount'], 2); ?></strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <?php if (!empty($quotation['notes_general']) || !empty($quotation['delivery_period']) || !empty($quotation['payment_terms']) || !empty($quotation['mra_wht_note_content'])): ?>
+        <div class="mt-4">
+            <h5 class="section-title">Additional Information</h5>
+            <?php if (!empty($quotation['notes_general'])): ?>
+                <p><strong>General Notes:</strong><br><?php echo nl2br(htmlspecialchars($quotation['notes_general'])); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($quotation['delivery_period'])): ?>
+                <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($quotation['delivery_period']); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($quotation['payment_terms'])): ?>
+                <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars($quotation['payment_terms']); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($quotation['mra_wht_note_content'])): ?>
+                <p><strong>MRA WHT Note:</strong><br><?php echo nl2br(htmlspecialchars($quotation['mra_wht_note_content'])); ?></p>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

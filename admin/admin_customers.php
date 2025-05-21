@@ -5,7 +5,7 @@ session_start();
 // Adjust the path based on your file structure
 require_once __DIR__ . '/../includes/time_formating_helper.php'; // Add this for time formatting functions
 require_once __DIR__ . '/../includes/db_connect.php';
-require_once __DIR__ . '/../includes/nav.php';
+
 
 
 // --- Authorization Check ---
@@ -290,6 +290,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
+require_once __DIR__ . '/../includes/nav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

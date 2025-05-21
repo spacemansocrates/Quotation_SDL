@@ -102,34 +102,188 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Login</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Base Variables */
+        :root {
+            --background: #f8fafc;
+            --foreground: #0f172a;
+            --card: #ffffff;
+            --card-foreground: #0f172a;
+            --primary: #0f172a;
+            --primary-foreground: #ffffff;
+            --secondary: #f1f5f9;
+            --secondary-foreground: #0f172a;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --accent: #f1f5f9;
+            --accent-foreground: #0f172a;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --border: #e2e8f0;
+            --input: #e2e8f0;
+            --ring: #0284c7;
+            --radius: 0.5rem;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 28rem;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--foreground);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.625rem;
+            font-size: 0.875rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background-color: var(--card);
+            color: var(--foreground);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input:focus {
+            border-color: var(--ring);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.625rem;
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--destructive);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Animation for the card */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Logo */
+/* Replace the existing logo style with this: */
+.logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: var(--card);
+    overflow: hidden;
+}
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>ADMIN Login</h1>
+        <div class="card">
+           <div class="logo">
+    <img src="images/logo.png" alt="Company Logo" style="width: 100%; height: 100%; object-fit: contain;">
+</div>
+            
+            <h1>ADMIN Login</h1>
 
-        <?php if (!empty($error_message)): ?>
-            <div class="message error"><?php echo $error_message; ?></div>
-        <?php endif; ?>
+            <?php if (!empty($error_message)): ?>
+                <div class="message error"><?php echo $error_message; ?></div>
+            <?php endif; ?>
 
-        <form action="login.php" method="POST">
-            <div>
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" value="<?php echo $username_value; ?>" required>
-            </div>
-            <div>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div>
-                <button type="submit">Login</button>
-            </div>
-        </form>
-        
-        <?php
-        // Example link to create first admin if none exists (remove in production)
-        // echo '<p><small>Need to create first admin? <a href="setup_admin.php">Setup here</a></small></p>'; 
-        ?>
+            <form action="login.php" method="POST">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" value="<?php echo $username_value; ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div>
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+            
+            <?php
+            // Example link to create first admin if none exists (remove in production)
+            // echo '<p><small>Need to create first admin? <a href="setup_admin.php">Setup here</a></small></p>'; 
+            ?>
+        </div>
     </div>
 </body>
 </html>

@@ -5,7 +5,7 @@ session_start();
 // Adjust paths if necessary
 require_once __DIR__ . '/../includes/time_formating_helper.php'; // Add this for time formatting functions
 require_once __DIR__ . '/../includes/db_connect.php';
-require_once __DIR__ . '/../includes/nav.php';
+
 
 // --- Authorization Check ---
 $allowed_manage_roles = ['admin', 'manager', 'supervisor'];
@@ -268,6 +268,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
+require_once __DIR__ . '/../includes/nav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -5,7 +5,7 @@ session_start();
 // Adjust paths if this file is not in the web root
 require_once __DIR__ . '/../includes/time_formating_helper.php'; // Add this for time formatting functions
 require_once __DIR__ . '/../includes/db_connect.php';
-require_once __DIR__ . '/../includes/nav.php';
+
 
 // --- Configuration for Image Uploads ---
 define('UPLOAD_DIR', __DIR__ . '/uploads/product_images/'); // Absolute path to upload directory
@@ -392,6 +392,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
+require_once __DIR__ . '/../includes/nav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

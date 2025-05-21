@@ -110,6 +110,7 @@ try {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -302,53 +303,100 @@ try {
             </div>
         </div>
     </div>
-    
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteQuotationModal" tabindex="-1" aria-labelledby="deleteQuotationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteQuotationModalLabel">Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete quotation <span id="quotationNumberToDelete"></span>? 
-                    This action cannot be undone.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteQuotationForm" action="delete_quotation.php" method="POST">
-                        <input type="hidden" id="quotationIdToDelete" name="quotation_id" value="">
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
-                </div>
+ <!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteQuotationModal" tabindex="-1" aria-labelledby="deleteQuotationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteQuotationModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete quotation #<strong id="quotationNumberToDelete"></strong>? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteQuotationForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="quotation_id" id="quotationIdInput">
+                    <button type="submit" class="btn btn-danger">Delete Quotation</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize date pickers
-            flatpickr(".datepicker", {
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
+<!-- Bootstrap and Flatpickr CDN scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize date pickers
+    flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+
+    // Handle delete modal
+    const deleteQuotationModal = document.getElementById('deleteQuotationModal');
+    if (deleteQuotationModal) {
+        deleteQuotationModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            const button = event.relatedTarget;
             
-            // Handle delete modals
-            const deleteQuotationModal = document.getElementById('deleteQuotationModal');
-            if (deleteQuotationModal) {
-                deleteQuotationModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const quotationId = button.getAttribute('data-quotation-id');
-                    const quotationNumber = button.getAttribute('data-quotation-number');
-                    
-                    document.getElementById('quotationIdToDelete').value = quotationId;
-                    document.getElementById('quotationNumberToDelete').textContent = quotationNumber;
-                });
-            }
+            // Extract info from data attributes
+            const quotationId = button.getAttribute('data-quotation-id');
+            const quotationNumber = button.getAttribute('data-quotation-number');
+
+            // Update the modal's content
+            document.getElementById('quotationNumberToDelete').textContent = quotationNumber;
+            document.getElementById('quotationIdInput').value = quotationId;
         });
-    </script>
-</body>
-</html>
+    }
+
+    // Handle form submission
+    const deleteQuotationForm = document.getElementById('deleteQuotationForm');
+    if (deleteQuotationForm) {
+        deleteQuotationForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const deleteButton = this.querySelector('button[type="submit"]');
+            
+            // Disable button and show loading state
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+            fetch('ajax_delete_quotation.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Find and remove the table row
+                    const quotationId = formData.get('quotation_id');
+                    const rowToRemove = document.querySelector(`button[data-quotation-id="${quotationId}"]`).closest('tr');
+                    if (rowToRemove) {
+                        rowToRemove.remove();
+                    }
+                    
+                    // Close the modal
+                    const modalInstance = bootstrap.Modal.getInstance(deleteQuotationModal);
+                    modalInstance.hide();
+                } else {
+                    alert('Error deleting quotation: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            })
+            .finally(() => {
+                // Reset button state
+                deleteButton.disabled = false;
+                deleteButton.textContent = 'Delete Quotation';
+            });
+        });
+    }
+});
+</script>

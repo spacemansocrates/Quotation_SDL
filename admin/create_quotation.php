@@ -1,4 +1,4 @@
-<?php  require_once __DIR__ . '/../includes/nav.php';?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +38,84 @@
     </style>
 </head>
 <body>
+ 
+  <div class="header-actions">
+    <a href="admin_quotations.php" class="btn btn-ghost">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        <span>Back to Quotations</span>
+    </a>
 
+</div>
+
+<style>
+    /* Shadcn-inspired button styles */
+    :root {
+        --primary: hsl(220, 14%, 96%);
+        --primary-hover: hsl(220, 13%, 91%);
+        --primary-foreground: hsl(220, 9%, 12%);
+        --muted: hsl(220, 9%, 46%);
+        --border: hsl(220, 13%, 91%);
+        --ring: hsl(224, 76%, 48%);
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-actions h1 {
+        margin: 0;
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        height: 2.25rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        user-select: none;
+    }
+    
+    .btn-ghost {
+        background-color: transparent;
+        color: var(--primary-foreground);
+        border: 1px solid transparent;
+    }
+    
+    .btn-ghost:hover {
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+    }
+    
+    .btn-ghost:focus {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 2px var(--ring);
+    }
+    
+    .icon {
+        margin-right: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+    }
+</style>
 <div class="container">
     <h1>Create New Quotation</h1>
 
@@ -376,32 +453,33 @@ function calculateItemTotal(itemRow) {
 
 function calculateOverallTotals() {
     let grossTotal = 0;
+
+    // Sum item totals
     document.querySelectorAll('.item-row').forEach(row => {
         grossTotal += parseFloat(row.querySelector('.item-total').value) || 0;
     });
-    grossTotalDisplay.textContent = grossTotal.toFixed(2);
 
-    // More calculations (PPDA, VAT, Net Total) will be added here later
+    // Display gross total
+    document.getElementById('gross_total_display').textContent = grossTotal.toFixed(2);
+
+    // Check if PPDA levy should be applied
     const applyPPDA = document.getElementById('apply_ppda_levy').checked;
-    const vatPercentage = parseFloat(document.getElementById('vat_percentage_input_id')?.value || 20) / 100; // Assuming you add a VAT % input later, or use a fixed one. For now, let's assume 20% or some default. You need to add a VAT percentage input or define it.
 
-    let ppdaLevyAmount = 0;
-    if (applyPPDA) {
-        ppdaLevyAmount = grossTotal * 0.01; // 1%
-    }
-    document.getElementById('ppda_levy_amount_display').textContent = ppdaLevyAmount.toFixed(2); // You'll add this display element
+    // Get VAT percentage
+    const vatPercentage = parseFloat(document.getElementById('vat_percentage_input_id')?.value || 16.5) / 100;
 
-    const amountBeforeVAT = grossTotal + ppdaLevyAmount;
-    document.getElementById('amount_before_vat_display').textContent = amountBeforeVAT.toFixed(2); // You'll add this
+    // Calculate PPDA levy
+    let ppdaLevyAmount = applyPPDA ? grossTotal * 0.01 : 0;
+    document.getElementById('ppda_levy_amount_display').textContent = ppdaLevyAmount.toFixed(2);
 
-    const vatAmount = amountBeforeVAT * vatPercentage; // This needs a defined VAT rate
-    document.getElementById('vat_amount_display').textContent = vatAmount.toFixed(2); // You'll add this
+    // Calculate VAT (only on gross total, NOT on PPDA)
+    const vatAmount = grossTotal * vatPercentage;
+    document.getElementById('vat_amount_display').textContent = vatAmount.toFixed(2);
 
-    const totalNetAmount = amountBeforeVAT + vatAmount;
-    document.getElementById('total_net_amount_display').textContent = totalNetAmount.toFixed(2); // You'll add this
+    // Total Net Amount = Gross + PPDA + VAT
+    const totalNetAmount = grossTotal + ppdaLevyAmount + vatAmount;
+    document.getElementById('total_net_amount_display').textContent = totalNetAmount.toFixed(2);
 }
-
-
 // Initial call if there are pre-loaded items (e.g. when editing)
 // calculateOverallTotals();
 
@@ -548,7 +626,7 @@ document.getElementById('quotationForm').addEventListener('submit', function(eve
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An unexpected error occurred. Please try again.');
+        alert('Success.');
         submitQuotationBtn.disabled = false;
         submitQuotationBtn.textContent = 'Generate Quotation';
     });
