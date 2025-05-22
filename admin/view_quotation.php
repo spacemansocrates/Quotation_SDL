@@ -33,15 +33,19 @@ try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Fetch Quotation Details
-    $sql_quotation = "SELECT q.*,
-       c.name AS customer_name, c.customer_code,
-       c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
-       s.name AS shop_name, s.shop_code,
-       u.username AS created_by_username
+ // Fetch Quotation Details
+$sql_quotation = "SELECT q.*,
+        c.name AS customer_name, c.customer_code,
+        c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
+        s.name AS shop_name, s.shop_code,
+        u_created.username AS created_by_username,
+        q.admin_notes,                                  -- <<< ADDED
+        u_approved.username AS approved_by_username     -- <<< ADDED
 FROM quotations q
 LEFT JOIN customers c ON q.customer_id = c.id
 LEFT JOIN shops s ON q.shop_id = s.id
-LEFT JOIN users u ON q.created_by_user_id = u.id
+LEFT JOIN users u_created ON q.created_by_user_id = u_created.id -- Alias for created_by
+LEFT JOIN users u_approved ON q.approved_by_user_id = u_approved.id -- Alias for approved_by <<< ADDED
 WHERE q.id = :quotation_id";
 
     $stmt_quotation = $conn->prepare($sql_quotation);
@@ -130,6 +134,19 @@ $display_customer_address = $quotation['customer_address_override'] ?? $quotatio
                 <p><strong>Company TPIN:</strong> <?php echo htmlspecialchars($quotation['company_tpin'] ?? 'N/A'); ?></p>
                 <p><strong>Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> days</p>
                 <p><strong>Created By:</strong> <?php echo htmlspecialchars($quotation['created_by_username'] ?? 'N/A'); ?></p>
+
+                            <?php if (!empty($quotation['admin_notes'])): ?>
+                                <h6 class="mt-3">Admin Notes:</h6>
+                                <p style="white-space: pre-wrap; background-color: #e9ecef; padding: 10px; border-radius: 4px;"><?php echo htmlspecialchars($quotation['admin_notes']); ?></p>
+                                <?php if (!empty($quotation['approved_by_username'])): ?>
+                                    <p><em>Notes by: <?php echo htmlspecialchars($quotation['approved_by_username']); ?></em></p>
+                                <?php else: ?>
+                                    <p><em>Notes by: N/A</em></p>
+                                <?php endif; ?>
+                            <?php elseif (isset($quotation['status']) && ($quotation['status'] === 'Approved' || $quotation['status'] === 'Denied' || $quotation['status'] === 'Rejected')): ?>
+                                <h6 class="mt-3">Admin Notes:</h6>
+                                <p>No admin notes provided.</p>
+                            <?php endif; ?>
             </div>
         </div>
 

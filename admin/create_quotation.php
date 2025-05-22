@@ -209,7 +209,7 @@
             <input type="number" id="quotation_validity_days" name="quotation_validity_days" value="30">
 
             <label for="mra_wht_note_content">MRA Withholding Tax Note Content:</label>
-            <textarea id="mra_wht_note_content" name="mra_wht_note_content" placeholder="Enter MRA withholding tax note..."></textarea>
+<textarea id="mra_wht_note_content" name="mra_wht_note_content" placeholder="Enter MRA withholding tax note...">MRA WITH HOLDING TAX EXEPTION CERTIFICATE NO.MRA/BMTO/WHTEC/008104 VALID UPTO 31-03-2026</textarea>
 
             <div>
                 <input type="checkbox" id="apply_ppda_levy" name="apply_ppda_levy">

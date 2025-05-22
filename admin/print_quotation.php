@@ -10,6 +10,9 @@ if (!$quotation_id) {
     die("Invalid quotation ID.");
 }
 
+// Check if images should be included (from GET parameter)
+$include_images = isset($_GET['include_images']) && $_GET['include_images'] === '1';
+
 // Database connection and queries to fetch quotation data
 try {
     $conn = new PDO("mysql:host=localhost;dbname=supplies", "root", ""); // Replace with your actual connection
@@ -37,6 +40,7 @@ try {
     $sql_items = "SELECT qi.*, 
                   p.name as product_name, 
                   p.sku as product_sku, 
+                  p.default_image_path, /* Fetch default image path from products table */
                   uom.name as uom_name
                   FROM quotation_items qi
                   LEFT JOIN products p ON qi.product_id = p.id
@@ -125,11 +129,44 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
     .signature img {
       height: 60px;
     }
+    .image-upload-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    .image-upload-container input[type="file"] {
+        display: none; /* Hide the default file input */
+    }
+    .image-upload-container .upload-btn {
+        background-color: #007bff; /* Blue for upload */
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    .image-upload-container .upload-btn:hover {
+        background-color: #0056b3;
+    }
+    .upload-feedback {
+        font-size: 10px;
+        color: green;
+    }
+    .upload-error {
+        font-size: 10px;
+        color: red;
+    }
     .print-button-container {
       position: fixed;
       top: 10px;
       right: 10px;
       z-index: 1000;
+      background-color: #f8f9fa; /* Light background for visibility */
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     .btn {
       padding: 8px 15px;
@@ -145,15 +182,52 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
     .btn-secondary {
       background-color: #6c757d;
     }
+    /* Styles for image column */
+    .product-image-cell {
+        text-align: center;
+    }
+    .product-image-cell img {
+        max-width: 80px; /* Adjust as needed */
+        max-height: 80px; /* Adjust as needed */
+        object-fit: contain;
+    }
+    <?php if (!$include_images): ?>
+    /* Hide image column by default if not requested */
+    .image-column {
+        display: none;
+    }
+    <?php endif; ?>
+
     @media print {
       .print-button-container {
         display: none;
       }
+      /* Ensure image column is visible when printing if include_images is true */
+      <?php if ($include_images): ?>
+      .image-column {
+          display: table-cell !important; /* Force display when printing */
+      }
+      <?php endif; ?>
     }
   </style>
+  <script>
+    function toggleImageColumn() {
+        const includeImages = document.getElementById('include_images').checked;
+        const currentUrl = new URL(window.location.href);
+        if (includeImages) {
+            currentUrl.searchParams.set('include_images', '1');
+        } else {
+            currentUrl.searchParams.delete('include_images');
+        }
+        window.location.href = currentUrl.toString();
+    }
+  </script>
 </head>
 <body>
   <div class="print-button-container">
+    <label>
+      <input type="checkbox" id="include_images" onchange="toggleImageColumn()" <?php echo $include_images ? 'checked' : ''; ?>> Include Images
+    </label>
     <button onclick="window.print()" class="btn">Print</button>
     <a href="view_quotation.php?id=<?php echo $quotation_id; ?>" class="btn btn-secondary">Back to View</a>
   </div>
@@ -180,17 +254,47 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
   <table>
     <tr>
       <th>Item No.</th>
+      <?php if ($include_images): ?>
+      <th class="image-column">Image</th>
+      <?php endif; ?>
       <th>Description</th>
       <th>Qty</th>
       <th>Rate Per <?php echo htmlspecialchars($quotation_items[0]['uom_name'] ?? 'PC'); ?></th>
       <th>Total Amount</th>
     </tr>
     <?php if (empty($quotation_items)): ?>
-      <tr><td colspan="5" style="text-align: center;">No items found.</td></tr>
+      <tr><td colspan="<?php echo $include_images ? '6' : '5'; ?>" style="text-align: center;">No items found.</td></tr>
     <?php else: ?>
-      <?php foreach ($quotation_items as $item): ?>
-      <tr>
+      <?php foreach ($quotation_items as $item): 
+        // Determine the image path to use
+        $item_image_path = $item['image_path_override'] ?? $item['default_image_path'];
+        $item_id_for_js = htmlspecialchars($item['id']); // Get the ID for JS
+      ?>
+      <tr id="item-row-<?php echo $item_id_for_js; ?>">
         <td><?php echo htmlspecialchars($item['item_number']); ?></td>
+        <?php if ($include_images): ?>
+        <td class="image-column product-image-cell">
+            <div class="image-display-area" id="image-display-<?php echo $item_id_for_js; ?>">
+                <?php if (!empty($item_image_path) && file_exists($item_image_path)): ?>
+                    <img src="<?php echo htmlspecialchars($item_image_path); ?>" alt="Product Image">
+                <?php else: ?>
+                    No Image
+                <?php endif; ?>
+            </div>
+            <?php if (!($item_image_path && file_exists($item_image_path))): // Show upload only if no image exists ?>
+            <div class="image-upload-container">
+                <input type="file" id="upload-input-<?php echo $item_id_for_js; ?>" 
+                       data-item-id="<?php echo $item_id_for_js; ?>" 
+                       accept="image/*" 
+                       onchange="handleImageUpload(this)">
+                <button class="upload-btn" onclick="document.getElementById('upload-input-<?php echo $item_id_for_js; ?>').click()">
+                    Add Image
+                </button>
+                <div class="upload-feedback" id="feedback-<?php echo $item_id_for_js; ?>"></div>
+            </div>
+            <?php endif; ?>
+        </td>
+        <?php endif; ?>
         <td><?php echo htmlspecialchars($item['product_name'] ?? $item['description']); ?></td>
         <td><?php echo htmlspecialchars(number_format($item['quantity'])); ?></td>
         <td><?php echo htmlspecialchars(number_format($item['rate_per_unit'], 2)); ?></td>
@@ -198,8 +302,7 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
       </tr>
       <?php endforeach; ?>
     <?php endif; ?>
-    
-    <tr class="summary-row">
+       <tr class="summary-row">
       <td colspan="4">Gross Total Amount</td>
       <td><?php echo number_format($quotation['gross_total_amount'], 2); ?></td>
     </tr>
@@ -212,7 +315,63 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
       <td><?php echo number_format($total_net_amount, 2); ?></td>
     </tr>
   </table>
-  
+  <script>
+    function toggleImageColumn() {
+        const includeImages = document.getElementById('include_images').checked;
+        const currentUrl = new URL(window.location.href);
+        if (includeImages) {
+            currentUrl.searchParams.set('include_images', '1');
+        } else {
+            currentUrl.searchParams.delete('include_images');
+        }
+        window.location.href = currentUrl.toString();
+    }
+
+    // Function to handle image upload via AJAX
+    async function handleImageUpload(input) {
+        const itemId = input.dataset.itemId;
+        const file = input.files[0];
+        const feedbackDiv = document.getElementById(`feedback-${itemId}`);
+        const imageDisplayArea = document.getElementById(`image-display-${itemId}`);
+
+        if (!file) {
+            feedbackDiv.textContent = '';
+            return;
+        }
+
+        feedbackDiv.textContent = 'Uploading...';
+        feedbackDiv.style.color = 'blue';
+
+        const formData = new FormData();
+        formData.append('item_id', itemId);
+        formData.append('item_image', file);
+
+        try {
+            const response = await fetch('upload_quotation_item_image.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                feedbackDiv.textContent = 'Upload successful!';
+                feedbackDiv.style.color = 'green';
+                // Update the image immediately without full page reload
+                imageDisplayArea.innerHTML = `<img src="${data.image_path}" alt="Product Image">`;
+                // Hide the upload controls after successful upload
+                input.closest('.image-upload-container').style.display = 'none';
+
+            } else {
+                feedbackDiv.textContent = `Upload failed: ${data.message}`;
+                feedbackDiv.style.color = 'red';
+            }
+        } catch (error) {
+            console.error('Error during upload:', error);
+            feedbackDiv.textContent = 'An error occurred during upload.';
+            feedbackDiv.style.color = 'red';
+        }
+    }
+  </script>
   <?php if (!empty($quotation['delivery_period'])): ?>
   <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($quotation['delivery_period']); ?></p>
   <?php endif; ?>
