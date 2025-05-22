@@ -1,0 +1,651 @@
+[2025-05-13 08:55:30] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.uom_id' in 'on clause'
+Query: SELECT p.*, c.name as category_name, u.name as uom_name, uc.username as creator_username, uu.username as updater_username
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN units_of_measurement u ON p.uom_id = u.id
+                LEFT JOIN users uc ON p.created_by_user_id = uc.id
+                LEFT JOIN users uu ON p.updated_by_user_id = uu.id
+                ORDER BY p.name ASC
+Params: []
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT p.*, c.n...')
+#1 C:\wamp64\www\supplies\admin\admin_products.php(358): DatabaseConfig::executeQuery(Object(PDO), 'SELECT p.*, c.n...')
+#2 {main}
+
+[2025-05-13 12:14:02] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'abbreviation' in 'field list'
+Query: SELECT id, name, abbreviation FROM units_of_measurement ORDER BY name
+Params: []
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT id, name...')
+#1 C:\wamp64\www\supplies\create_quotation.php(19): DatabaseConfig::executeQuery(Object(PDO), 'SELECT id, name...')
+#2 {main}
+
+[2025-05-13 12:46:32] Query Execution Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '... ) VALUES ( ... )' at line 1
+Query: INSERT INTO quotations ( ... ) VALUES ( ... )
+Params: {"shop_id":"1","customer_id":null,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":null,"customer_address_override":null,"gross_total":1280000,"ppda_levy_applied":0,"ppda_levy_amount":0,"subtotal_before_vat":1280000,"vat_percentage":16.5,"vat_amount":211200,"total_net_amount":1491200,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(92): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 12:48:32] Query Execution Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '... ) VALUES ( ... )' at line 1
+Query: INSERT INTO quotations ( ... ) VALUES ( ... )
+Params: {"shop_id":"1","customer_id":null,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":null,"customer_address_override":null,"gross_total":1280000,"ppda_levy_applied":0,"ppda_levy_amount":0,"subtotal_before_vat":1280000,"vat_percentage":16.5,"vat_amount":211200,"total_net_amount":1491200,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Draft"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(92): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 12:49:44] Query Execution Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '... ) VALUES ( ... )' at line 1
+Query: INSERT INTO quotations ( ... ) VALUES ( ... )
+Params: {"shop_id":"1","customer_id":null,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":null,"customer_address_override":null,"gross_total":1280000,"ppda_levy_applied":0,"ppda_levy_amount":0,"subtotal_before_vat":1280000,"vat_percentage":16.5,"vat_amount":211200,"total_net_amount":1491200,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(92): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 12:57:11] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(104): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 12:58:07] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(104): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 13:00:21] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.default_rate' in 'field list'
+Query: SELECT p.id, p.name, p.description, p.default_rate, p.default_unit_id, p.default_image_path, u.name as unit_name, u.abbreviation as unit_abbreviation 
+                            FROM products p
+                            LEFT JOIN units_of_measurement u ON p.default_unit_id = u.id
+                            WHERE p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ? LIMIT 10
+Params: ["%donga%","%donga%","%donga%"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT p.id, p....')
+#1 C:\wamp64\www\supplies\ajax_handler.php(51): DatabaseConfig::executeQuery(Object(PDO), 'SELECT p.id, p....', Array)
+#2 {main}
+
+[2025-05-13 13:00:59] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT id, name, address, tpin, customer_code FROM customers WHERE id = ?
+Params: ["1"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT id, name...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(32): DatabaseConfig::executeQuery(Object(PDO), 'SELECT id, name...', Array)
+#2 {main}
+
+[2025-05-13 13:01:09] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(104): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 13:07:10] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(103): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 13:07:53] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(103): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 13:14:47] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT name, address, customer_code FROM customers WHERE id = ?
+Params: [1]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT name, ad...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(103): DatabaseConfig::executeQuery(Object(PDO), 'SELECT name, ad...', Array)
+#2 {main}
+
+[2025-05-13 13:14:56] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT address, logo_path, tpin FROM shops WHERE id = ?
+Params: ["1"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT address,...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(18): DatabaseConfig::executeQuery(Object(PDO), 'SELECT address,...', Array)
+#2 {main}
+
+[2025-05-13 13:15:40] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'address' in 'field list'
+Query: SELECT address, logo_path, tpin FROM shops WHERE id = ?
+Params: ["1"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT address,...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(18): DatabaseConfig::executeQuery(Object(PDO), 'SELECT address,...', Array)
+#2 {main}
+
+[2025-05-13 13:18:40] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'tpin' in 'field list'
+Query: SELECT address_line1, logo_path, tpin FROM shops WHERE id = ?
+Params: ["1"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT address_...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(18): DatabaseConfig::executeQuery(Object(PDO), 'SELECT address_...', Array)
+#2 {main}
+
+[2025-05-13 13:19:56] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'tpin' in 'field list'
+Query: SELECT address_line1, logo_path, tpin FROM shops WHERE id = ?
+Params: ["1"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT address_...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(18): DatabaseConfig::executeQuery(Object(PDO), 'SELECT address_...', Array)
+#2 {main}
+
+[2025-05-13 13:21:14] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.default_rate' in 'field list'
+Query: SELECT p.id, p.name, p.description, p.default_rate, p.default_unit_id, p.default_image_path, u.name as unit_name, u.abbreviation as unit_abbreviation 
+                            FROM products p
+                            LEFT JOIN units_of_measurement u ON p.default_unit_id = u.id
+                            WHERE p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ? LIMIT 10
+Params: ["%sda%","%sda%","%sda%"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT p.id, p....')
+#1 C:\wamp64\www\supplies\ajax_handler.php(51): DatabaseConfig::executeQuery(Object(PDO), 'SELECT p.id, p....', Array)
+#2 {main}
+
+[2025-05-13 13:21:23] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'gross_total' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total, ppda_levy_applied, ppda_levy_amount, 
+                                    subtotal_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, general_note, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note_included, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total, :ppda_levy_applied, :ppda_levy_amount, 
+                                    :subtotal_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :general_note, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note_included, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total":250000,"ppda_levy_applied":0,"ppda_levy_amount":0,"subtotal_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:22:45] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ppda_levy_applied' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, ppda_levy_applied, ppda_levy_amount, 
+                                    subtotal_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, general_note, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note_included, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :ppda_levy_applied, :ppda_levy_amount, 
+                                    :subtotal_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :general_note, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note_included, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"ppda_levy_applied":0,"ppda_levy_amount":0,"subtotal_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:25:20] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'subtotal_before_vat' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    subtotal_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, general_note, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note_included, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :subtotal_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :general_note, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note_included, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"subtotal_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:27:51] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'general_note' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, general_note, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note_included, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :general_note, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note_included, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":"","delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:29:15] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mra_wht_note_included' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note_included, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note_included, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note_included":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:30:56] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mra_wht_note_content' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:40:50] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(166): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:45:44] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"status":"Draft"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(166): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:52:14] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mra_wht_note_content' in 'field list'
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 13:55:05] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"5453124","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":250000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":250000,"vat_percentage":16.5,"vat_amount":41250,"total_net_amount":291250,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:01:12] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.default_rate' in 'field list'
+Query: SELECT p.id, p.name, p.description, p.default_rate, p.default_unit_id, p.default_image_path, u.name as unit_name, u.abbreviation as unit_abbreviation 
+                            FROM products p
+                            LEFT JOIN units_of_measurement u ON p.default_unit_id = u.id
+                            WHERE p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ? LIMIT 10
+Params: ["%hhh%","%hhh%","%hhh%"]
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('SELECT p.id, p....')
+#1 C:\wamp64\www\supplies\ajax_handler.php(51): DatabaseConfig::executeQuery(Object(PDO), 'SELECT p.id, p....', Array)
+#2 {main}
+
+[2025-05-13 14:01:24] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount_amount":6400000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":6400000,"vat_percentage":16.5,"vat_amount":1056000,"total_net_amount":7456000,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:07:21] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount":6400000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":6400000,"vat_percentage":16.5,"vat_amount":1056000,"total_net_amount":7456000,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:08:15] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Query: INSERT INTO quotations (
+                                    shop_id, customer_id, quotation_date, company_tpin, 
+                                    customer_name_override, customer_address_override, 
+                                    gross_total_amount, apply_ppda_levy, ppda_levy_amount, 
+                                    amount_before_vat, vat_percentage, vat_amount, 
+                                    total_net_amount, notes_general, delivery_period, 
+                                    payment_terms, quotation_validity_days, 
+                                    mra_wht_note, mra_wht_note_content, status
+                                ) VALUES (
+                                    :shop_id, :customer_id, :quotation_date, :company_tpin, 
+                                    :customer_name_override, :customer_address_override, 
+                                    :gross_total_amount, :apply_ppda_levy, :ppda_levy_amount, 
+                                    :amount_before_vat, :vat_percentage, :vat_amount, 
+                                    :total_net_amount, :notes_general, :delivery_period, 
+                                    :payment_terms, :quotation_validity_days, 
+                                    :mra_wht_note, :mra_wht_note_content, :status
+                                )
+Params: {"shop_id":"1","customer_id":1,"quotation_date":"2025-05-13","company_tpin":"","customer_name_override":"Salvage 2000","customer_address_override":"53V5+9G8, Blantyre","gross_total_amount":6400000,"apply_ppda_levy":0,"ppda_levy_amount":0,"amount_before_vat":6400000,"vat_percentage":16.5,"vat_amount":1056000,"total_net_amount":7456000,"general_note":null,"delivery_period":"","payment_terms":"","quotation_validity_days":30,"mra_wht_note":0,"mra_wht_note_content":null,"status":"Generated"}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\supplies\ajax_handler.php(167): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:11:43] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'unit_id' in 'field list'
+Query: INSERT INTO quotation_items (
+                    quotation_id, product_id, description, image_path_override, 
+                    quantity, unit_id, custom_unit_name, rate_per_unit, total_amount
+                ) VALUES (
+                    :quotation_id, :product_id, :description, :image_path_override, 
+                    :quantity, :unit_id, :custom_unit_name, :rate_per_unit, :total_amount
+                )
+Params: {"quotation_id":"1","product_id":null,"description":"hhh","image_path_override":null,"quantity":8,"unit_id":null,"custom_unit_name":"","rate_per_unit":800000,"total_amount":6400000}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(257): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:14:38] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'unit_id' in 'field list'
+Query: INSERT INTO quotation_items (
+                    quotation_id, product_id, description, image_path_override, 
+                    quantity, unit_id, custom_unit_name, rate_per_unit, total_amount
+                ) VALUES (
+                    :quotation_id, :product_id, :description, :image_path_override, 
+                    :quantity, :unit_id, :custom_unit_name, :rate_per_unit, :total_amount
+                )
+Params: {"quotation_id":"2","product_id":null,"description":"hhh","image_path_override":null,"quantity":8,"unit_id":null,"custom_unit_name":"","rate_per_unit":800000,"total_amount":6400000}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(257): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 14:23:44] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'unit_id' in 'field list'
+Query: INSERT INTO quotation_items (
+                    quotation_id, product_id, description, image_path_override, 
+                    quantity, unit_id, custom_unit_name, rate_per_unit, total_amount
+                ) VALUES (
+                    :quotation_id, :product_id, :description, :image_path_override, 
+                    :quantity, :unit_id, :custom_unit_name, :rate_per_unit, :total_amount
+                )
+Params: {"quotation_id":"3","product_id":null,"description":"hhh","image_path_override":null,"quantity":8,"unit_id":null,"custom_unit_name":"","rate_per_unit":800000,"total_amount":6400000}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(257): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-13 17:18:05] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'unit_id' in 'field list'
+Query: INSERT INTO quotation_items (
+                    quotation_id, product_id, description, image_path_override, 
+                    quantity, unit_id, custom_unit_name, rate_per_unit, total_amount
+                ) VALUES (
+                    :quotation_id, :product_id, :description, :image_path_override, 
+                    :quantity, :unit_id, :custom_unit_name, :rate_per_unit, :total_amount
+                )
+Params: {"quotation_id":"4","product_id":null,"description":"hhh","image_path_override":null,"quantity":8,"unit_id":null,"custom_unit_name":"","rate_per_unit":800000,"total_amount":6400000}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('INSERT INTO quo...')
+#1 C:\wamp64\www\supplies\ajax_handler.php(259): DatabaseConfig::executeQuery(Object(PDO), 'INSERT INTO quo...', Array)
+#2 {main}
+
+[2025-05-16 07:55:42] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\view_quotation_details.php(60): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:02:25] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\view_quotation_details.php(60): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:02:26] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\view_quotation_details.php(60): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:05:13] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\view_quotation_details.php(60): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:06:02] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\print_quotation.php(70): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:07:53] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":5}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\view_quotation_details.php(60): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:14:04] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\print_quotation.php(70): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-05-16 08:16:57] Query Execution Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.address' in 'field list'
+Query: 
+        SELECT q.*, 
+               c.name AS customer_name, 
+               c.address AS customer_address,
+               c.phone AS customer_phone,
+               c.email AS customer_email,
+               u.username AS created_by_username,
+               u.full_name AS created_by_full_name
+        FROM quotations q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN users u ON q.created_by_user_id = u.id
+        WHERE q.id = :quotationId
+    
+Params: {":quotationId":6}
+Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\supplies\admin\print_quotation.php(70): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
