@@ -1,6 +1,6 @@
 <?php
 // process_quotation.php
-session_start(); // <------------------------------------------------- ADD THIS
+session_start(); // 
 
 header('Content-Type: application/json');
 

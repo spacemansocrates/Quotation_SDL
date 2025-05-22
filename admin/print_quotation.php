@@ -379,7 +379,13 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
   <?php if (!empty($quotation['payment_terms'])): ?>
   <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars($quotation['payment_terms']); ?></p>
   <?php endif; ?>
-  
+    <?php if (!empty($quotation['notes_general'])): ?>
+  <p><strong>General Note:</strong> <?php echo htmlspecialchars($quotation['notes_general']); ?></p>
+  <?php endif; ?>
+    <?php if (!empty($quotation['mra_wht_note_content'])): ?>
+  <p><strong>MRA With holding Tax note:</strong> <?php echo htmlspecialchars($quotation['mra_wht_note_content']); ?></p>
+  <?php endif; ?>
+
   <p><strong>Quotation Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> Days</p>
   
   <div class="signature">
