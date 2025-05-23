@@ -326,11 +326,11 @@ addItemBtn.addEventListener('click', function() {
     itemRow.classList.add('item-row');
     itemRow.setAttribute('id', `item-row-${itemCounter}`);
     itemRow.innerHTML = `
-        <input type="text" name="item_search[]" class="item-search" placeholder="Search SKU or Name" style="flex-grow:2;">
+        <input type="text" name="item_search[]" class="item-search" placeholder="Search SKU or Name (Optional)" style="flex-grow:2;">
         <div class="item-search-results"></div>
         <input type="hidden" name="product_id[]" class="product-id">
-        <input type="text" name="item_name[]" class="item-name" placeholder="Name" readonly>
-        <input type="text" name="item_description[]" class="item-description" placeholder="Description" readonly>
+        <input type="text" name="item_name[]" class="item-name" placeholder="Item Name / Product Name">
+        <input type="text" name="item_description[]" class="item-description" placeholder="Description (Optional)">
         <input type="number" name="item_quantity[]" class="item-quantity" value="1" min="1" placeholder="Qty" style="width: 70px;">
         <input type="text" name="item_uom[]" class="item-uom" placeholder="UoM">
         <input type="number" name="item_unit_price[]" class="item-unit-price" step="0.01" placeholder="Unit Price">
@@ -359,13 +359,17 @@ function attachItemEventListeners(itemRow) {
     const imagePreview = itemRow.querySelector('.item-image-preview');
     const uploadImageBtn = itemRow.querySelector('.upload-image-btn');
 
-
     itemSearchInput.addEventListener('keyup', function() {
         const query = this.value;
         if (query.length < 2) {
             itemSearchResultsDiv.innerHTML = '';
+            // If user clears search, treat it as a potential manual entry.
+            // Clear the product ID to ensure it's not linked to a product.
+            productIdInput.value = '';
+            // Keep existing manual text in name/description/price
             return;
         }
+
         fetch('search_products.php?query=' + encodeURIComponent(query))
             .then(response => response.json())
             .then(data => {
@@ -380,20 +384,19 @@ function attachItemEventListeners(itemRow) {
                         li.style.cursor = 'pointer';
                         li.addEventListener('click', function() {
                             productIdInput.value = product.id;
-                            itemNameInput.value = product.name;
-                            itemDescriptionInput.value = product.description || '';
-                            unitPriceInput.value = parseFloat(product.default_unit_price).toFixed(2);
-                            uomInput.value = product.default_unit_of_measurement || '';
-                            // Optional: Display default image
+                            itemNameInput.value = product.name; // Populate from product
+                            itemDescriptionInput.value = product.description || ''; // Populate from product
+                            unitPriceInput.value = parseFloat(product.default_unit_price).toFixed(2); // Populate from product
+                            uomInput.value = product.default_unit_of_measurement || ''; // Populate from product
                             if (product.default_image_path) {
-                                imagePreview.src = product.default_image_path; // Ensure this path is web-accessible
+                                imagePreview.src = product.default_image_path;
                                 imagePreview.style.display = 'block';
                             } else {
                                 imagePreview.src = '';
                                 imagePreview.style.display = 'none';
                             }
-                            itemSearchInput.value = `${product.sku} - ${product.name}`;
-                            itemSearchResultsDiv.innerHTML = '';
+                            itemSearchInput.value = `${product.sku} - ${product.name}`; // Set search box to selected product
+                            itemSearchResultsDiv.innerHTML = ''; // Clear search results
                             calculateItemTotal(itemRow);
                             calculateOverallTotals();
                         });
@@ -401,15 +404,26 @@ function attachItemEventListeners(itemRow) {
                     });
                     itemSearchResultsDiv.appendChild(ul);
                 } else {
-                    itemSearchResultsDiv.innerHTML = '<p>No products found.</p>';
+                    itemSearchResultsDiv.innerHTML = '<p>No products found. You can enter details manually.</p>';
+                    // If no products found, ensure product_id is cleared for manual entry
+                    productIdInput.value = '';
                 }
             })
             .catch(error => {
                 console.error('Error fetching products:', error);
                 itemSearchResultsDiv.innerHTML = '<p>Error searching products.</p>';
+                productIdInput.value = ''; // Clear on error too
             });
     });
 
+    // Add input listeners for manual changes to name, description, quantity, price, and UoM
+    // This ensures recalculations happen even if no product is selected.
+    itemNameInput.addEventListener('input', function() {
+        // No total recalculation needed for name/description changes
+    });
+    itemDescriptionInput.addEventListener('input', function() {
+        // No total recalculation needed for name/description changes
+    });
     quantityInput.addEventListener('input', function() {
         calculateItemTotal(itemRow);
         calculateOverallTotals();
@@ -418,6 +432,9 @@ function attachItemEventListeners(itemRow) {
         calculateItemTotal(itemRow);
         calculateOverallTotals();
     });
+    uomInput.addEventListener('input', function() {
+        // No total recalculation needed for UoM changes
+    });
 
     removeBtn.addEventListener('click', function() {
         itemRow.remove();
@@ -425,7 +442,7 @@ function attachItemEventListeners(itemRow) {
     });
 
     uploadImageBtn.addEventListener('click', function() {
-        imageUploadInput.click(); // Trigger the hidden file input
+        imageUploadInput.click();
     });
 
     imageUploadInput.addEventListener('change', function(event) {
@@ -443,7 +460,6 @@ function attachItemEventListeners(itemRow) {
         }
     });
 }
-
 function calculateItemTotal(itemRow) {
     const quantity = parseFloat(itemRow.querySelector('.item-quantity').value) || 0;
     const unitPrice = parseFloat(itemRow.querySelector('.item-unit-price').value) || 0;
