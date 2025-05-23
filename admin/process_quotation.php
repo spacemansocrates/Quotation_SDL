@@ -1,6 +1,6 @@
 <?php
 // process_quotation.php
-session_start(); // <------------------------------------------------- ADD THIS
+session_start(); // <------------------------------------------------- ADD 
 
 header('Content-Type: application/json');
 
@@ -158,28 +158,28 @@ $sql_item = "INSERT INTO quotation_items (
                 description,
                 image_path_override,
                 quantity,
-                unit_of_measurement, -- This should be the ID from your units_of_measurement table
+                unit_of_measurement, -- Changed from unit_of_measurement_id
                 rate_per_unit,
                 total_amount,
                 created_at,
                 updated_at,
                 created_by_user_id,
                 updated_by_user_id
-             ) VALUES (
+              ) VALUES (
                 :quotation_id,
                 :product_id,
                 :item_number,
                 :description,
                 :image_path_override,
                 :quantity,
-                :unit_of_measurement_id, -- Placeholder for the ID
+                :unit_of_measurement, -- Changed from :unit_of_measurement_id
                 :rate_per_unit,
                 :total_amount,
                 NOW(),
                 NOW(),
                 :created_by_user_id,
                 :updated_by_user_id
-             )";
+              )";
 $stmt_item = $conn->prepare($sql_item);
 
 $item_product_ids = isset($_POST['product_id']) ? $_POST['product_id'] : [];
@@ -217,7 +217,8 @@ for ($i = 0; $i < count($item_product_ids); $i++) {
     // $stmt_uom->execute([$uom_code]);
     // $unit_of_measurement_id = $stmt_uom->fetchColumn();
     // If it's directly the ID from a select dropdown:
-    $unit_of_measurement_id = !empty($item_uom_ids_from_form[$i]) ? filter_var($item_uom_ids_from_form[$i], FILTER_VALIDATE_INT) : null;
+$unit_of_measurement_for_db = filter_var($item_uom_ids_from_form[$i], FILTER_SANITIZE_STRING); // This will hold the string from the form
+
 
     $rate_per_unit = filter_var($item_unit_prices[$i], FILTER_VALIDATE_FLOAT);
     $total_amount = $quantity * $rate_per_unit;
@@ -250,7 +251,7 @@ for ($i = 0; $i < count($item_product_ids); $i++) {
         ':description' => $description,
         ':image_path_override' => $uploaded_image_path_override,
         ':quantity' => $quantity,
-        ':unit_of_measurement_id' => $unit_of_measurement_id,
+        ':unit_of_measurement' => $unit_of_measurement_for_db, 
         ':rate_per_unit' => $rate_per_unit,
         ':total_amount' => $total_amount,
         ':created_by_user_id' => $created_by_user_id,

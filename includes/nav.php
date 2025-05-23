@@ -17,6 +17,7 @@ $nav_permissions = [
     'admin_products.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
     'admin_units.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
        'admin_quotations.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
+         'admin_manage_quotations.php' => ['admin'], // Viewer can list
     // Add other pages like 'dashboard.php' here if needed
     // 'dashboard.php' => ['admin', 'manager', 'supervisor', 'staff', 'viewer'],
 ];
@@ -81,8 +82,13 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
         </li>
     <?php endif; ?>
            <?php if (isset($nav_permissions['admin_quotations.php']) && in_array($user_role, $nav_permissions['admin_quotations.php'])): ?>
-        <li class="<?php echo ($current_page === 'quotations.php') ? 'active' : ''; ?>">
+        <li class="<?php echo ($current_page === 'admin_quotations.php') ? 'active' : ''; ?>">
             <a href="admin_quotations.php">Manage Quotations</a>
+        </li>
+    <?php endif; ?>
+        <?php if (isset($nav_permissions['admin_manage_quotations.php']) && in_array($user_role, $nav_permissions['admin_manage_quotations.php'])): ?>
+        <li class="<?php echo ($current_page === 'admin_manage_quotations.php') ? 'active' : ''; ?>">
+            <a href="admin_manage_quotations.php">Quotations Approval</a>
         </li>
     <?php endif; ?>
 
