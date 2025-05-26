@@ -75,9 +75,18 @@ $display_customer_name = $quotation['customer_name_override'] ?? $quotation['cus
 $display_customer_address = $quotation['customer_address_override'] ?? $quotation['customer_address_line1'];
 $formatted_date = date('d/m/Y', strtotime($quotation['quotation_date']));
 
-// Calculate VAT amount if not already provided
-$vat_amount = $quotation['vat_amount'] ?? ($quotation['gross_total_amount'] * ($quotation['vat_percentage'] / 100));
-$total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_amount'] + $vat_amount);
+// PPDA Levy: Use from DB if explicitly set and numeric. Percentage for display.
+$ppda_levy_amount = (float)($quotation['ppda_levy_amount'] ?? 0);
+$ppda_levy_percentage = (float)($quotation['ppda_levy_percentage'] ?? 0); // For display
+
+// Calculate values for summary section
+$gross_total_amount = (float)($quotation['gross_total_amount'] ?? 0);
+$vat_percentage = (float)($quotation['vat_percentage'] ?? 16.5);
+$vat_amount = (float)($quotation['vat_amount'] ?? ($gross_total_amount * ($vat_percentage / 100)));
+$total_net_amount = (float)($quotation['total_net_amount'] ?? ($gross_total_amount + $vat_amount + $ppda_levy_amount));
+
+// Calculate colspan for summary rows
+$summary_label_colspan = $include_images ? 5 : 4;
 
 ?>
 <!DOCTYPE html>
@@ -210,18 +219,6 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
       <?php endif; ?>
     }
   </style>
-  <script>
-    function toggleImageColumn() {
-        const includeImages = document.getElementById('include_images').checked;
-        const currentUrl = new URL(window.location.href);
-        if (includeImages) {
-            currentUrl.searchParams.set('include_images', '1');
-        } else {
-            currentUrl.searchParams.delete('include_images');
-        }
-        window.location.href = currentUrl.toString();
-    }
-  </script>
 </head>
 <body>
   <div class="print-button-container">
@@ -278,7 +275,7 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
                 <?php if (!empty($item_image_path) && file_exists($item_image_path)): ?>
                     <img src="<?php echo htmlspecialchars($item_image_path); ?>" alt="Product Image">
                 <?php else: ?>
-                    No Image
+                    
                 <?php endif; ?>
             </div>
             <?php if (!($item_image_path && file_exists($item_image_path))): // Show upload only if no image exists ?>
@@ -302,19 +299,49 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
       </tr>
       <?php endforeach; ?>
     <?php endif; ?>
-       <tr class="summary-row">
-      <td colspan="4">Gross Total Amount</td>
-      <td><?php echo number_format($quotation['gross_total_amount'], 2); ?></td>
+    
+    <tr class="summary-row">
+      <td colspan="<?php echo $summary_label_colspan; ?>">Gross Total Amount</td>
+      <td><?php echo number_format($gross_total_amount, 2); ?></td>
     </tr>
     <tr class="summary-row">
-      <td colspan="4">VAT <?php echo htmlspecialchars($quotation['vat_percentage']); ?>%</td>
+      <td colspan="<?php echo $summary_label_colspan; ?>">VAT <?php echo htmlspecialchars($vat_percentage); ?>%</td>
       <td><?php echo number_format($vat_amount, 2); ?></td>
     </tr>
+
+    <?php // Display PPDA Levy only if its amount is greater than 0 ?>
+    <?php if ($ppda_levy_amount > 0): ?>
     <tr class="summary-row">
-      <td colspan="4">Total Net Amount</td>
+      <td colspan="<?php echo $summary_label_colspan; ?>">PPDA Levy (<?php echo htmlspecialchars($ppda_levy_percentage); ?>%):</td>
+      <td><?php echo number_format($ppda_levy_amount, 2); ?></td>
+    </tr>
+    <?php endif; ?>
+    
+    <tr class="summary-row">
+      <td colspan="<?php echo $summary_label_colspan; ?>">Total Net Amount</td>
       <td><?php echo number_format($total_net_amount, 2); ?></td>
     </tr>
   </table>
+
+  <?php if (!empty($quotation['delivery_period'])): ?>
+  <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($quotation['delivery_period']); ?></p>
+  <?php endif; ?>
+  
+  <?php if (!empty($quotation['payment_terms'])): ?>
+  <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars($quotation['payment_terms']); ?></p>
+  <?php endif; ?>
+    
+  <?php if (!empty($quotation['mra_wht_note_content'])): ?>
+  <p><strong>MRA With holding Tax note:</strong> <?php echo htmlspecialchars($quotation['mra_wht_note_content']); ?></p>
+  <?php endif; ?>
+
+  <p><strong>Quotation Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> Days</p>
+  
+  <div class="signature">
+    <p>For <?php echo htmlspecialchars($company_name); ?></p>
+    <img src="<?php echo htmlspecialchars($company_signature); ?>" alt="Authorized Signature">
+  </div>
+
   <script>
     function toggleImageColumn() {
         const includeImages = document.getElementById('include_images').checked;
@@ -372,25 +399,5 @@ $total_net_amount = $quotation['total_net_amount'] ?? ($quotation['gross_total_a
         }
     }
   </script>
-  <?php if (!empty($quotation['delivery_period'])): ?>
-  <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($quotation['delivery_period']); ?></p>
-  <?php endif; ?>
-  
-  <?php if (!empty($quotation['payment_terms'])): ?>
-  <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars($quotation['payment_terms']); ?></p>
-  <?php endif; ?>
-    <?php if (!empty($quotation['notes_general'])): ?>
-  <p><strong>General Note:</strong> <?php echo htmlspecialchars($quotation['notes_general']); ?></p>
-  <?php endif; ?>
-    <?php if (!empty($quotation['mra_wht_note_content'])): ?>
-  <p><strong>MRA With holding Tax note:</strong> <?php echo htmlspecialchars($quotation['mra_wht_note_content']); ?></p>
-  <?php endif; ?>
-
-  <p><strong>Quotation Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> Days</p>
-  
-  <div class="signature">
-    <p>For <?php echo htmlspecialchars($company_name); ?></p>
-    <img src="<?php echo htmlspecialchars($company_signature); ?>" alt="Authorized Signature">
-  </div>
 </body>
 </html>

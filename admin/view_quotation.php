@@ -206,10 +206,7 @@ $display_customer_address = $quotation['customer_address_override'] ?? $quotatio
                             <td><?php echo number_format($quotation['ppda_levy_amount'], 2); ?></td>
                         </tr>
                         <?php endif; ?>
-                        <tr>
-                            <td>Amount Before VAT:</td>
-                            <td><?php echo number_format($quotation['amount_before_vat'], 2); ?></td>
-                        </tr>
+     
                         <tr>
                             <td>VAT (<?php echo htmlspecialchars($quotation['vat_percentage']); ?>%):</td>
                             <td><?php echo number_format($quotation['vat_amount'], 2); ?></td>

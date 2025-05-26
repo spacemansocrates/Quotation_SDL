@@ -633,7 +633,7 @@ document.getElementById('quotationForm').addEventListener('submit', function(eve
         if (data.success) {
             alert('Quotation created successfully! Quotation Number: ' + data.quotation_number);
             // Optionally redirect or clear the form
-            window.location.href = 'view_quotations.php'; // Or wherever you manage quotations
+            window.location.href = 'admin_quotations.php'; // Or wherever you manage quotations
         } else {
             alert('Error creating quotation: ' + data.message);
             submitQuotationBtn.disabled = false;
