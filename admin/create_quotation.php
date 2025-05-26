@@ -286,23 +286,25 @@ customerSearchInput.addEventListener('keyup', function() {
             if (data.error) {
                 customerSearchResultsDiv.innerHTML = `<p>${data.error}</p>`;
             } else if (data.length > 0) {
-                const ul = document.createElement('ul');
+                const select = document.createElement('select');
+                select.size = Math.min(data.length, 10); // Show up to 10 results
                 data.forEach(customer => {
-                    const li = document.createElement('li');
-                    li.textContent = `${customer.customer_code} - ${customer.first_name} ${customer.last_name}`; // Adjust as per your fields
-                    li.style.cursor = 'pointer';
-                    li.addEventListener('click', function() {
-                        customerIdInput.value = customer.id;
-                        customerCodeDisplay.value = customer.customer_code;
-                        customerAddressLine1Display.textContent = customer.address_line1 || 'N/A';
-                        // Populate other customer detail fields
-                        // customer_details_display.querySelector(...) = customer.other_field;
-                        customerSearchInput.value = `${customer.customer_code} - ${customer.first_name} ${customer.last_name}`;
-                        customerSearchResultsDiv.innerHTML = ''; // Clear results after selection
-                    });
-                    ul.appendChild(li);
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = `${customer.customer_code} - ${customer.first_name} ${customer.last_name}`; // Adjust as per your fields
+                    option.dataset.code = customer.customer_code;
+                    option.dataset.address = customer.address_line1 || '';
+                    select.appendChild(option);
                 });
-                customerSearchResultsDiv.appendChild(ul);
+                select.addEventListener('change', function() {
+                    const opt = this.options[this.selectedIndex];
+                    customerIdInput.value = opt.value;
+                    customerCodeDisplay.value = opt.dataset.code;
+                    customerAddressLine1Display.textContent = opt.dataset.address || 'N/A';
+                    customerSearchInput.value = opt.textContent;
+                    customerSearchResultsDiv.innerHTML = '';
+                });
+                customerSearchResultsDiv.appendChild(select);
             } else {
                 customerSearchResultsDiv.innerHTML = '<p>No customers found.</p>';
             }
@@ -374,38 +376,45 @@ function attachItemEventListeners(itemRow) {
             .then(response => response.json())
             .then(data => {
                 itemSearchResultsDiv.innerHTML = '';
+
                 if (data.error) {
                     itemSearchResultsDiv.innerHTML = `<p>${data.error}</p>`;
                 } else if (data.length > 0) {
-                    const ul = document.createElement('ul');
+                    const select = document.createElement('select');
+                    select.size = Math.min(data.length, 10);
                     data.forEach(product => {
-                        const li = document.createElement('li');
-                        li.textContent = `${product.sku} - ${product.name} (Price: ${product.default_unit_price})`;
-                        li.style.cursor = 'pointer';
-                        li.addEventListener('click', function() {
-                            productIdInput.value = product.id;
-                            itemNameInput.value = product.name; // Populate from product
-                            itemDescriptionInput.value = product.description || ''; // Populate from product
-                            unitPriceInput.value = parseFloat(product.default_unit_price).toFixed(2); // Populate from product
-                            uomInput.value = product.default_unit_of_measurement || ''; // Populate from product
-                            if (product.default_image_path) {
-                                imagePreview.src = product.default_image_path;
-                                imagePreview.style.display = 'block';
-                            } else {
-                                imagePreview.src = '';
-                                imagePreview.style.display = 'none';
-                            }
-                            itemSearchInput.value = `${product.sku} - ${product.name}`; // Set search box to selected product
-                            itemSearchResultsDiv.innerHTML = ''; // Clear search results
-                            calculateItemTotal(itemRow);
-                            calculateOverallTotals();
-                        });
-                        ul.appendChild(li);
+                        const option = document.createElement('option');
+                        option.value = product.id;
+                        option.textContent = `${product.sku} - ${product.name} (Price: ${product.default_unit_price})`;
+                        option.dataset.name = product.name;
+                        option.dataset.desc = product.description || '';
+                        option.dataset.price = product.default_unit_price;
+                        option.dataset.uom = product.default_unit_of_measurement || '';
+                        option.dataset.image = product.default_image_path || '';
+                        select.appendChild(option);
                     });
-                    itemSearchResultsDiv.appendChild(ul);
+                    select.addEventListener('change', function() {
+                        const opt = this.options[this.selectedIndex];
+                        productIdInput.value = opt.value;
+                        itemNameInput.value = opt.dataset.name;
+                        itemDescriptionInput.value = opt.dataset.desc;
+                        unitPriceInput.value = parseFloat(opt.dataset.price).toFixed(2);
+                        uomInput.value = opt.dataset.uom;
+                        if (opt.dataset.image) {
+                            imagePreview.src = opt.dataset.image;
+                            imagePreview.style.display = 'block';
+                        } else {
+                            imagePreview.src = '';
+                            imagePreview.style.display = 'none';
+                        }
+                        itemSearchInput.value = opt.textContent;
+                        itemSearchResultsDiv.innerHTML = '';
+                        calculateItemTotal(itemRow);
+                        calculateOverallTotals();
+                    });
+                    itemSearchResultsDiv.appendChild(select);
                 } else {
                     itemSearchResultsDiv.innerHTML = '<p>No products found. You can enter details manually.</p>';
-                    // If no products found, ensure product_id is cleared for manual entry
                     productIdInput.value = '';
                 }
             })
