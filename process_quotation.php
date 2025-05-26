@@ -114,25 +114,24 @@ try {
     $default_company_tpin = $shop_data['tpin_no'];
 
     // --- 3. Generate Quotation Number ---
-    // SDLT/customer_code-shop_code-####
-    $quotation_number_prefix = "SDLT/" . $customer_code . "-" . $shop_code . "-";
-    $sql_max_quot_num = "SELECT quotation_number FROM quotations 
-                         WHERE quotation_number LIKE ? 
-                         ORDER BY CAST(SUBSTRING_INDEX(quotation_number, '-', -1) AS UNSIGNED) DESC, quotation_number DESC
+    // SDL/shop_code/customer_code-###
+    $quotation_number_prefix = "SDL/" . $shop_code . "/" . $customer_code . "-";
+    $sql_max_quot_num = "SELECT quotation_number FROM quotations
+                         WHERE quotation_number LIKE ?
+                         ORDER BY CAST(RIGHT(SUBSTRING_INDEX(quotation_number, '-', -1), 3) AS UNSIGNED) DESC
                          LIMIT 1";
     $stmt_max_quot = DatabaseConfig::executeQuery($pdo, $sql_max_quot_num, [$quotation_number_prefix . '%']);
     $last_quot_num_full = $stmt_max_quot->fetchColumn();
-    
+
     $next_seq_num = 1;
     if ($last_quot_num_full) {
         $last_seq_part = substr($last_quot_num_full, strlen($quotation_number_prefix));
-        if (is_numeric($last_seq_part)) {
-            $next_seq_num = (int)$last_seq_part + 1;
+        $last_seq_digits = substr($last_seq_part, -3);
+        if (is_numeric($last_seq_digits)) {
+            $next_seq_num = (int)$last_seq_digits + 1;
         }
     }
-    // The prompt says "from 01", implying 2 digits. If more are needed, adjust padding.
-    // If `####` was meant for 4 digits, use `sprintf("%04d", $next_seq_num)`
-    $quotation_number_suffix = sprintf("%02d", $next_seq_num); 
+    $quotation_number_suffix = sprintf("%03d", $next_seq_num);
     $quotation_number = $quotation_number_prefix . $quotation_number_suffix;
 
 

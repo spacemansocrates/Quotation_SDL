@@ -23,25 +23,36 @@ function generateQuotationNumber($conn, $shop_ids_array, $customer_id) {
             $shop_codes_array[] = $row['shop_code'];
         }
     }
-    $shop_code_prefix = !empty($shop_codes_array) ? implode('-', $shop_codes_array) : 'SHOP'; // Use a default or handle error if no shop
+    $shop_code_prefix = !empty($shop_codes_array) ? implode('-', $shop_codes_array) : 'SHOP';
 
     // Fetch customer code
     $stmt_customer = $conn->prepare("SELECT customer_code FROM customers WHERE id = ?");
     $stmt_customer->execute([$customer_id]);
     $customer = $stmt_customer->fetch(PDO::FETCH_ASSOC);
-    $customer_code_prefix = $customer ? $customer['customer_code'] : 'CUST'; // Use a default or handle error
+    $customer_code_prefix = $customer ? $customer['customer_code'] : 'CUST';
 
-    // Generate date part and a sequence number
-    $date_part = date('Ymd'); // e.g., 20250517
+    // Build prefix and find last sequence number ignoring any date portion
+    $quotation_prefix = "SDL/{$shop_code_prefix}/{$customer_code_prefix}-";
+    $sequence_stmt = $conn->prepare(
+        "SELECT quotation_number FROM quotations
+         WHERE quotation_number LIKE ?
+         ORDER BY CAST(RIGHT(SUBSTRING_INDEX(quotation_number, '-', -1), 3) AS UNSIGNED) DESC
+         LIMIT 1"
+    );
+    $sequence_stmt->execute([$quotation_prefix . '%']);
+    $last_quotation = $sequence_stmt->fetch(PDO::FETCH_COLUMN);
 
-    // Get the next sequence number for this date and shop/customer combo (more robust)
-    // This is simplified; a robust approach might involve a separate sequence table or MAX(id) for today
-    $sequence_stmt = $conn->prepare("SELECT COUNT(id) as count_today FROM quotations WHERE quotation_number LIKE ?");
-    $sequence_stmt->execute(["SDL/{$shop_code_prefix}/{$customer_code_prefix}-{$date_part}%"]);
-    $count_today = $sequence_stmt->fetch(PDO::FETCH_ASSOC)['count_today'];
-    $next_sequence = str_pad($count_today + 1, 4, '0', STR_PAD_LEFT); // e.g., 0001
+    $next_seq = 1;
+    if ($last_quotation) {
+        $last_seq_part = substr($last_quotation, strlen($quotation_prefix));
+        $last_seq_digits = substr($last_seq_part, -3);
+        if (is_numeric($last_seq_digits)) {
+            $next_seq = (int)$last_seq_digits + 1;
+        }
+    }
+    $next_sequence = str_pad($next_seq, 3, '0', STR_PAD_LEFT);
 
-    return "SDL/{$shop_code_prefix}/{$customer_code_prefix}-{$date_part}{$next_sequence}";
+    return "SDL/{$shop_code_prefix}/{$customer_code_prefix}-{$next_sequence}";
 }
 // --- End Helper ---
 
