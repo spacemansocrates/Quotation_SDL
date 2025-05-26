@@ -130,7 +130,7 @@ try {
 
                 <div>
                     <label for="quotation_number">Quotation Number:</label>
-                    <input type="text" id="quotation_number" name="quotation_number_display" value="SDLT/CUSTCODE-SHOPCODE-####" readonly>
+                    <input type="text" id="quotation_number" name="quotation_number_display" value="SDL/SHOPCODE/CUSTCODE-###" readonly>
                     <input type="hidden" id="customer_code_hidden" name="customer_code_hidden">
                     <input type="hidden" id="shop_code_hidden" name="shop_code_hidden">
                 </div>

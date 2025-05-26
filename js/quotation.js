@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * Updates the quotation number format based on shop and customer selection
      */
     function updateQuotationNumber() {
-        let quotationNumber = 'SDLT/';
+        let quotationNumber = 'SDL/';
         
         // Get customer code
         let customerCode = 'CUSTCODE';
@@ -331,9 +331,10 @@ document.addEventListener('DOMContentLoaded', function() {
             shopCode = shopCodeHidden;
         }
         
-        // Format: SDLT/CUSTCODE-SHOPCODE-####
-        const uniqueNumber = Math.floor(1000 + Math.random() * 9000); // Random 4-digit number
-        quotationNumber += `${customerCode}-${shopCode}-${uniqueNumber}`;
+        // Format: SDL/SHOPCODE/CUSTCODE-###
+        const uniqueNumber = Math.floor(1 + Math.random() * 999);
+        const padded = String(uniqueNumber).padStart(3, '0');
+        quotationNumber += `${shopCode}/${customerCode}-${padded}`;
         
         document.getElementById('quotation_number').value = quotationNumber;
     }
