@@ -39,7 +39,7 @@ try {
 
         if (!$quotation) {
             $_SESSION['error_message'] = "Quotation not found.";
-            header('Location: admin_quotations.php');
+            echo "quotation not found";
             exit();
         }
 
@@ -55,7 +55,7 @@ try {
 
     } else {
          $_SESSION['error_message'] = "No Quotation ID specified for editing.";
-         header('Location: admin_quotations.php');
+        echo "No Quotation ID specified for editing.";
          exit();
     }
 
