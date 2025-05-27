@@ -1,0 +1,552 @@
+/* Shadcn-inspired Admin Users CSS */
+:root {
+    --background: #ffffff;
+    --foreground: #000000;
+    --card: #ffffff;
+    --card-foreground: #000000;
+    --popover: #ffffff;
+    --popover-foreground: #000000;
+    --primary: #0070f3;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #09090b;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --accent: #f4f4f5;
+    --accent-foreground: #09090b;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #0070f3;
+
+    /* Role Colors */
+    --role-admin: #ef4444;
+    --role-manager: #10b981;
+    --role-supervisor: #3b82f6;
+    --role-staff: #8b5cf6;
+    --role-viewer: #6b7280;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    color: var(--foreground);
+    background-color: #f4f4f7;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: var(--background);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.user-info {
+    text-align: right;
+    margin-bottom: 1rem;
+    color: var(--muted-foreground);
+}
+
+.user-info a {
+    color: var(--primary);
+    text-decoration: none;
+    margin-left: 0.5rem;
+}
+
+h1, h2 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+/* Form Styling */
+form {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+form div {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.required {
+    color: var(--destructive);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--input);
+    border-radius: 0.375rem;
+    font-size: 1rem;
+}
+
+input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+button, .button-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+button {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.button-link {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    border: 1px solid var(--border);
+    margin-left: 0.5rem;
+}
+
+.button-link.edit {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.button-link.delete {
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--card);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+table th, table td {
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    text-align: left;
+}
+
+table th {
+    background-color: var(--muted);
+    font-weight: 600;
+}
+
+table tr:nth-child(even) {
+    background-color: var(--accent);
+}
+
+/* Role Colors */
+.role-admin { color: var(--role-admin); }
+.role-manager { color: var(--role-manager); }
+.role-supervisor { color: var(--role-supervisor); }
+.role-staff { color: var(--role-staff); }
+.role-viewer { color: var(--role-viewer); }
+
+/* Status Styling */
+.status-active {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.status-inactive {
+    color: var(--destructive);
+    font-weight: 600;
+}
+
+/* Tooltip for Timestamps */
+.timestamp {
+    position: relative;
+    cursor: help;
+}
+
+.timestamp .tooltip {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+    text-align: center;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.timestamp:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Message Styling */
+.message {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+}
+
+.message.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--role-manager);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.message.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--destructive);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.message.info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--role-supervisor);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* --- Additional CSS for Quotation Page (to complement Shadcn-inspired base) --- */
+
+/* General Layout & Specific Sections for Quotation Form */
+.form-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid var(--border); /* Using Shadcn variable */
+    border-radius: 0.375rem; /* Using Shadcn-like radius */
+    background-color: var(--card); /* Using Shadcn variable */
+}
+
+.form-section h3 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border); /* Using Shadcn variable */
+    padding-bottom: 10px;
+    margin-bottom: 15px; /* Added for spacing */
+    color: var(--primary); /* Match primary heading color */
+}
+
+/* Ensure labels within form sections behave as expected */
+.form-section label {
+    display: block; /* Ensure it takes full width for stacking */
+    margin-bottom: 0.5rem; /* Consistent with Shadcn */
+    font-weight: 600; /* Consistent with Shadcn */
+}
+
+/* Readonly input styling (Shadcn doesn't have a specific class for this) */
+input[readonly] {
+    background-color: var(--muted); /* Using Shadcn variable for a disabled/muted look */
+    color: var(--muted-foreground);
+    cursor: not-allowed;
+}
+
+/* Specific button for removing items */
+.remove-item-btn {
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+    padding: 0.375rem 0.75rem; /* Slightly smaller padding for in-table buttons */
+    font-size: 0.875rem; /* Slightly smaller font size */
+}
+.remove-item-btn:hover {
+    opacity: 0.9;
+}
+
+/* Items Table - Shadcn provides base table, this adds specifics */
+#items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    /* Shadcn table has box-shadow, so this might be redundant if you apply a class
+       but if #items-table doesn't get the Shadcn table class, this is useful */
+    /* background-color: var(--card); */
+    /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); */
+}
+
+#items-table th,
+#items-table td {
+    border: 1px solid var(--border); /* Using Shadcn variable */
+    padding: 0.75rem; /* Consistent with Shadcn */
+    text-align: left;
+    vertical-align: middle; /* Good for table cells with varying content height */
+}
+
+#items-table th {
+    background-color: var(--muted); /* Consistent with Shadcn */
+    font-weight: 600; /* Consistent with Shadcn */
+}
+
+/* Item Image Preview in Table */
+.item-image-preview {
+    max-width: 50px;
+    max-height: 50px;
+    display: block;
+    margin-top: 5px; /* Spacing if there's text above */
+    border-radius: 0.25rem; /* Small border radius for images */
+    border: 1px solid var(--border); /* Light border for the image */
+}
+
+/* Utility class */
+.hidden {
+    display: none !important; /* Important to override other display properties */
+}
+
+/* Shop Logo Preview in Header Section */
+.shop-logo-preview {
+    max-width: 150px;
+    max-height: 70px;
+    float: right; /* Position to the right */
+    margin-left: 15px; /* Space from other content */
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+}
+
+/* Summary Section Table */
+.summary-table {
+    width: 50%; /* Or adjust as needed */
+    margin-left: auto; /* Align to right */
+    margin-top: 20px;
+    border-collapse: collapse; /* For cleaner borders */
+}
+.summary-table td {
+    padding: 8px; /* Custom padding for summary */
+    border: 1px solid var(--border);
+}
+.summary-table td:first-child {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 10px;
+    background-color: var(--muted); /* Light background for labels */
+    width: 60%; /* Give more space to labels */
+}
+.summary-table input[type="number"] {
+    width: 80px !important; /* Override general input width for small inputs like VAT % */
+    display: inline-block !important;
+    padding: 0.375rem; /* Adjust padding for smaller input */
+}
+
+
+/* --- Print Quotation Specific Styles --- */
+/* These are essential and likely not in your admin CSS */
+
+.print-container {
+    width: 800px; /* Or A4 typical width like 210mm */
+    margin: 20px auto; /* Centering for screen preview */
+    background: var(--background); /* Use var for consistency if viewed on screen */
+    padding: 30px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Softer shadow for print preview */
+}
+
+.print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--foreground); /* Using var */
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+.print-header .shop-info img {
+    max-height: 80px; /* Control logo size */
+    margin-bottom: 10px;
+}
+.print-header .shop-info h3 {
+    color: var(--foreground); /* Ensure shop name is dark for print */
+    margin-bottom: 5px;
+}
+.print-header .quote-title {
+    text-align: right;
+}
+.print-header .quote-title h2 {
+    margin: 0 0 10px 0;
+    font-size: 28px; /* Larger title */
+    color: var(--primary); /* Can keep primary color or switch to foreground */
+}
+.print-header .quote-title p {
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+}
+
+.print-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+.print-details .customer-info,
+.print-details .quotation-meta {
+    width: 48%;
+}
+.print-details strong {
+    font-weight: 600; /* Ensure strong is bold */
+}
+
+.print-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    font-size: 0.9rem; /* Slightly smaller font for table content */
+}
+.print-items-table th, .print-items-table td {
+    border: 1px solid #ccc; /* Lighter border for print often looks better */
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+.print-items-table th {
+    background-color: #f0f0f0; /* Light grey for print headers */
+    color: var(--foreground); /* Ensure text is dark */
+    font-weight: 600;
+}
+.print-items-table img.item-thumbnail {
+    max-width: 60px;
+    max-height: 60px;
+    margin-top: 5px;
+    border: 1px solid #eee;
+    border-radius: 3px;
+}
+
+.print-summary {
+    width: 55%; /* Adjust width as needed */
+    margin-left: auto;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+.print-summary td {
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+.print-summary td:first-child {
+    text-align: right;
+    font-weight: 600;
+    background-color: #f8f8f8; /* Very light background for labels */
+    width: 65%;
+}
+.print-summary strong {
+    font-weight: 700; /* Bolder for totals */
+}
+
+
+.print-notes p, .print-terms p, .print-validity p, .print-mra p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.print-mra {
+    border-top: 1px dashed #ccc;
+    padding-top: 10px;
+    margin-top: 15px;
+}
+.print-mra p {
+    font-style: italic;
+}
+
+.print-signature {
+    margin-top: 50px; /* More space before signature */
+    padding-top: 20px;
+    /* border-top: 1px solid var(--foreground); */ /* Optional line above signature area */
+    text-align: right;
+}
+.print-signature img {
+    max-height: 60px;
+    display: block; /* Makes margin auto work if needed for centering in its block */
+    margin-left: auto; /* If signature image is not full width of its container */
+    margin-bottom: 5px;
+}
+.print-signature p {
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
+.print-signature p:nth-last-child(2):not(:has(img))  { /* target the placeholder line if no image */
+    padding-bottom: 30px; /* Space for manual signature */
+    border-bottom: 1px solid var(--foreground);
+    width: 200px; /* Width of the signature line */
+    margin-left: auto; /* Align line to right */
+    margin-right: 0; /* Align line to right */
+}
+
+
+/* Actual Print Media Query */
+@media print {
+    body {
+        margin: 0;
+        background-color: #fff; /* Ensure white background for printing */
+        color: #000; /* Ensure black text */
+        font-size: 10pt; /* Base font size for print */
+
+    }
+
+    /* Hide elements not for printing from create_quotation.php */
+    .container:not(.print-container), /* Hide main form container if not print-container */
+    .form-section button, /* Hide form buttons */
+    .actions button:not(#print-button-on-preview), /* Hide action buttons */
+    #print-button-on-preview, /* Hide the print button itself */
+    .user-info /* Hide user info bar if present */
+    {
+        display: none !important;
+    }
+
+    .print-container {
+        width: 100%;
+        border: none;
+        box-shadow: none;
+        margin: 0;
+        padding: 10mm 15mm; /* Standard print margins */
+    }
+
+    .print-header .shop-info img {
+      max-height: 2cm; /* Control logo size in print */
+    }
+    .print-items-table img.item-thumbnail {
+        max-width: 1.5cm;
+        max-height: 1.5cm;
+    }
+
+    /* Ensure critical background colors print */
+    .print-items-table th, .print-summary td:first-child {
+        background-color: #f0f0f0 !important;
+    }
+    
+    /* Avoid page breaks inside these elements if possible */
+    .print-header, .print-details, .print-terms, .print-signature {
+        page-break-inside: avoid;
+    }
+    table, tr, td, th, tbody, thead, tfoot {
+        page-break-inside: avoid !important; /* Try to keep table rows together */
+    }
+    .print-items-table tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid; /* Don't break after a heading */
+    }
+}

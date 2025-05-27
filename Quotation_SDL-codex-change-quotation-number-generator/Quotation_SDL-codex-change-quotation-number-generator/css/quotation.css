@@ -1,0 +1,226 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #333;
+}
+
+.form-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.form-section h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[readonly] {
+    background-color: #e9e9e9;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.remove-item-btn {
+    background-color: #dc3545;
+}
+.remove-item-btn:hover {
+    background-color: #c82333;
+}
+
+#items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+#items-table th,
+#items-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#items-table th {
+    background-color: #f0f0f0;
+}
+
+.item-image-preview {
+    max-width: 50px;
+    max-height: 50px;
+    display: block; /* For margin auto to work if needed */
+}
+
+.hidden {
+    display: none;
+}
+
+.shop-logo-preview {
+    max-width: 150px;
+    max-height: 70px;
+    float: right;
+}
+
+.summary-table {
+    width: 50%;
+    margin-left: auto; /* Align to right */
+    margin-top: 20px;
+}
+.summary-table td {
+    padding: 5px;
+}
+.summary-table td:first-child {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 10px;
+}
+
+/* For Print Quotation */
+.print-container {
+    width: 800px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border: 1px solid #ccc;
+}
+
+.print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.print-header .shop-info img {
+    max-height: 80px;
+    margin-bottom: 10px;
+}
+.print-header .quote-title {
+    text-align: right;
+}
+.print-header .quote-title h2 {
+    margin: 0;
+    font-size: 24px;
+}
+.print-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.print-details .customer-info,
+.print-details .quotation-meta {
+    width: 48%;
+}
+.print-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+.print-items-table th, .print-items-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+.print-items-table th { background-color: #f2f2f2; }
+.print-items-table img.item-thumbnail { max-width: 60px; max-height: 60px; margin-top: 5px;}
+
+.print-summary {
+    width: 50%;
+    margin-left: auto; /* Pushes table to the right */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+.print-summary td {
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+.print-summary td:first-child { text-align: right; font-weight: bold; }
+
+.print-notes p, .print-terms p, .print-validity p, .print-mra p {
+    margin: 5px 0;
+}
+.print-signature {
+    margin-top: 50px;
+    text-align: right; /* Or as needed */
+    /* Add image for signature or line */
+}
+.print-signature img {
+    max-height: 60px;
+}
+
+
+@media print {
+    body {
+        margin: 0;
+        background-color: #fff;
+        -webkit-print-color-adjust: exact; /* Chrome, Safari */
+        print-color-adjust: exact; /* Standard property for compatibility */
+        /* Removed unsupported property: color-adjust */
+    }
+    .container, .form-section button, .actions button:not(#print-button-on-preview) { /* Hide form elements */
+        display: none !important;
+    }
+    .print-container {
+        width: 100%;
+        border: none;
+        box-shadow: none;
+        margin: 0;
+        padding: 10mm; /* Adjust print margins */
+    }
+    .print-header .shop-info img {
+      max-height: 2cm; /* Control logo size in print */
+    }
+    .print-items-table img.item-thumbnail { max-width: 1.5cm; max-height: 1.5cm;}
+
+    /* Ensure background colors print if any are critical (like table headers) */
+    .print-items-table th {
+        background-color: #f2f2f2 !important; /* Important to override screen styles */
+    }
+    /* Add any other print-specific styles */
+}

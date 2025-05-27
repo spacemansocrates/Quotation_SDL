@@ -1,0 +1,300 @@
+/* css/style.css */
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Forms */
+form {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding and border in element's total width */
+}
+
+input[type="checkbox"] {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+button, .button-link {
+    display: inline-block;
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 1em;
+    margin-right: 5px;
+}
+
+button:hover, .button-link:hover {
+    background-color: #4cae4c;
+}
+
+.button-link.edit {
+    background-color: #f0ad4e;
+}
+.button-link.edit:hover {
+    background-color: #ec971f;
+}
+
+.button-link.delete {
+    background-color: #d9534f;
+}
+.button-link.delete:hover {
+    background-color: #c9302c;
+}
+
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Messages */
+.message {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+.message.error {
+    background-color: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}
+.message.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.actions a {
+    margin-right: 5px;
+    text-decoration: none;
+}
+
+.required {
+    color: red;
+}
+
+.user-info {
+    text-align: right;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+.user-info a {
+    color: #d9534f;
+    text-decoration: none;
+    margin-left: 10px;
+}
+.user-info a:hover {
+    text-decoration: underline;
+}
+/* Nav Styling - Shadcn-inspired */
+
+.admin-nav {
+    background-color: var(--background);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.admin-nav ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+}
+
+.admin-nav li {
+    position: relative;
+}
+
+.admin-nav li a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.admin-nav li a:hover {
+    color: var(--primary);
+    background-color: var(--secondary);
+}
+
+.admin-nav li.active {
+    border-bottom: 2px solid var(--primary);
+}
+
+.admin-nav li.active a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Logout button styling */
+.admin-nav li.logout {
+    margin-left: auto; /* Push to right */
+}
+
+.admin-nav li.logout a {
+    color: var(--muted-foreground);
+    border-left: 1px solid var(--border);
+}
+
+.admin-nav li.logout a:hover {
+    color: var(--destructive);
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .admin-nav ul {
+        flex-direction: column;
+    }
+    
+    .admin-nav li {
+        width: 100%;
+    }
+    
+    .admin-nav li.active {
+        border-bottom: none;
+        border-left: 2px solid var(--primary);
+    }
+    
+    .admin-nav li.logout {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .admin-nav li.logout a {
+        border-left: none;
+    }
+}
+
+/* Role-specific styling for navigation links */
+.role-admin .admin-nav li.admin-only a {
+    position: relative;
+}
+
+.role-admin .admin-nav li.admin-only a::after {
+    content: '•';
+    color: var(--role-admin);
+    position: absolute;
+    right: 0.5rem;
+    top: 0.75rem;
+}
+
+/* Animation for active indicator */
+.admin-nav li.active {
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-nav li.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Badge for indicating number of items (optional feature) */
+.admin-nav .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    margin-left: 0.5rem;
+}
+
+/* Status dot indicators (can be added to links) */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-dot.online {
+    background-color: var(--role-manager);
+}
+
+.status-dot.busy {
+    background-color: var(--role-admin);
+}
+
+.status-dot.away {
+    background-color: var(--role-supervisor);
+}
