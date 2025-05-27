@@ -1,240 +1,302 @@
 <?php
 // process_quotation.php
-require_once(__DIR__ . '/includes/config.php'); // For session and user_id
-require_once(__DIR__ . '/includes/db_connect.php');
+session_start(); // <------------------------------------------------- ADD 
 
 header('Content-Type: application/json');
-$response = ['success' => false, 'message' => 'An error occurred.'];
-$pdo = null;
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $response['message'] = 'Invalid request method.';
-    echo json_encode($response);
-    exit;
-}
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "supplies";
+$conn = null; // Initialize
 
-// Ensure user is logged in (basic check, enhance with roles/permissions)
-if (!isset($_SESSION['user_id'])) {
-    $response['message'] = 'Authentication required. Please log in.';
-    http_response_code(401); // Unauthorized
-    echo json_encode($response);
-    exit;
-}
-$current_user_id = (int)$_SESSION['user_id'];
-
-try {
-    $pdo = getDatabaseConnection();
-    DatabaseConfig::beginTransaction($pdo);
-
-    // --- 1. Handle Customer ---
-    $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
-    $customer_code = null;
-    $customer_name_for_quotation = $_POST['customer_name_override'] ?? null;
-    $customer_address_for_quotation = $_POST['customer_address_override'] ?? null;
-
-    if (!empty($_POST['save_new_customer_checkbox']) && $_POST['save_new_customer_checkbox'] === 'on') {
-        // Save new customer
-        $new_customer_name = $_POST['customer_name_override'];
-        $new_customer_address = $_POST['customer_address_override']; // Could be split into address_line1, address_line2
-        $new_customer_tpin = $_POST['new_customer_tpin'] ?? null;
-        $new_customer_code_input = $_POST['new_customer_code'] ?? null;
-
-        if (empty($new_customer_name)) {
-            throw new Exception("New customer name is required.");
+// --- Helper function to generate quotation number ---
+function generateQuotationNumber($conn, $shop_ids_array, $customer_id) {
+    // Fetch shop codes for all selected shops
+    $shop_codes_array = [];
+    if (!empty($shop_ids_array)) {
+        $shop_placeholders = implode(',', array_fill(0, count($shop_ids_array), '?'));
+        $stmt_shop = $conn->prepare("SELECT shop_code FROM shops WHERE id IN ($shop_placeholders)");
+        $stmt_shop->execute($shop_ids_array);
+        while ($row = $stmt_shop->fetch(PDO::FETCH_ASSOC)) {
+            $shop_codes_array[] = $row['shop_code'];
         }
-
-        if (empty($new_customer_code_input)) {
-            // Auto-generate customer code if not provided
-            $prefix = "C"; // Or a setting
-            $stmt_code = DatabaseConfig::executeQuery(
-                $pdo,
-                "SELECT customer_code FROM customers WHERE customer_code RLIKE ? ORDER BY CAST(SUBSTRING(customer_code, " . (strlen($prefix) + 1) . ") AS UNSIGNED) DESC LIMIT 1",
-                ['^' . $prefix . '[0-9]+$']
-            );
-            $last_cust_code = $stmt_code->fetchColumn();
-            $next_cust_number = 1;
-            if ($last_cust_code) {
-                $last_number_val = (int)substr($last_cust_code, strlen($prefix));
-                $next_cust_number = $last_number_val + 1;
-            }
-            $customer_code = $prefix . sprintf('%05d', $next_cust_number); // e.g., C00001
-        } else {
-            // Validate provided customer code
-            $stmt_check_code = DatabaseConfig::executeQuery($pdo, "SELECT id FROM customers WHERE customer_code = ?", [$new_customer_code_input]);
-            if ($stmt_check_code->fetch()) {
-                throw new Exception("Customer code '{$new_customer_code_input}' already exists.");
-            }
-            $customer_code = $new_customer_code_input;
-        }
-        
-        $sql_insert_customer = "INSERT INTO customers (customer_code, name, address_line1, tpin_no, created_by_user_id, created_at, updated_at) 
-                                VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-        DatabaseConfig::executeQuery($pdo, $sql_insert_customer, [
-            $customer_code,
-            $new_customer_name,
-            $new_customer_address, // You might want to parse this into address_line1, city etc.
-            $new_customer_tpin,
-            $current_user_id
-        ]);
-        $customer_id = $pdo->lastInsertId();
-        $customer_name_for_quotation = $new_customer_name; // Use this for quotation override fields
-        $customer_address_for_quotation = $new_customer_address;
-
-    } elseif ($customer_id) {
-        // Existing customer selected
-        $stmt_cust = DatabaseConfig::executeQuery($pdo, "SELECT customer_code, name, address_line1, address_line2, city_location FROM customers WHERE id = ?", [$customer_id]);
-        $existing_customer = $stmt_cust->fetch(PDO::FETCH_ASSOC);
-        if (!$existing_customer) {
-            throw new Exception("Selected customer not found.");
-        }
-        $customer_code = $existing_customer['customer_code'];
-        // If override fields are empty, use existing customer data
-        if (empty($customer_name_for_quotation)) $customer_name_for_quotation = $existing_customer['name'];
-        if (empty($customer_address_for_quotation)) {
-             $customer_address_for_quotation = trim($existing_customer['address_line1'] . "\n" . $existing_customer['address_line2'] . "\n" . $existing_customer['city_location']);
-        }
-    } else {
-        // No customer selected, and not saving a new one. Allow if overrides are present.
-        if (empty($customer_name_for_quotation)) {
-             throw new Exception("Customer name is required if not selecting an existing customer or saving a new one.");
-        }
-        // For quotation number, if no customer_code, we might need a generic one or disallow
-        $customer_code = "NOCUST"; // Or handle as an error if a customer code is strictly needed for quotation number.
     }
+    $shop_code_prefix = !empty($shop_codes_array) ? implode('-', $shop_codes_array) : 'SHOP';
 
+    // Fetch customer code
+    $stmt_customer = $conn->prepare("SELECT customer_code FROM customers WHERE id = ?");
+    $stmt_customer->execute([$customer_id]);
+    $customer = $stmt_customer->fetch(PDO::FETCH_ASSOC);
+    $customer_code_prefix = $customer ? $customer['customer_code'] : 'CUST';
 
-    // --- 2. Prepare Quotation Data ---
-    $shop_id = (int)$_POST['shop_id'];
-    $stmt_shop = DatabaseConfig::executeQuery($pdo, "SELECT shop_code, tpin_no FROM shops WHERE id = ?", [$shop_id]);
-    $shop_data = $stmt_shop->fetch(PDO::FETCH_ASSOC);
-    if (!$shop_data) {
-        throw new Exception("Selected shop not found.");
-    }
-    $shop_code = $shop_data['shop_code'];
-    $default_company_tpin = $shop_data['tpin_no'];
+    // Build prefix and find last sequence number ignoring any date portion
+    $quotation_prefix = "SDL/{$shop_code_prefix}/{$customer_code_prefix}-";
+    $sequence_stmt = $conn->prepare(
+        "SELECT quotation_number FROM quotations
+         WHERE quotation_number LIKE ?
+         ORDER BY CAST(RIGHT(SUBSTRING_INDEX(quotation_number, '-', -1), 3) AS UNSIGNED) DESC
+         LIMIT 1"
+    );
+    $sequence_stmt->execute([$quotation_prefix . '%']);
+    $last_quotation = $sequence_stmt->fetch(PDO::FETCH_COLUMN);
 
-    // --- 3. Generate Quotation Number ---
-    // SDL/shop_code/customer_code-###
-    $quotation_number_prefix = "SDL/" . $shop_code . "/" . $customer_code . "-";
-    $sql_max_quot_num = "SELECT quotation_number FROM quotations
-                         WHERE quotation_number LIKE ?
-                         ORDER BY CAST(RIGHT(SUBSTRING_INDEX(quotation_number, '-', -1), 3) AS UNSIGNED) DESC
-                         LIMIT 1";
-    $stmt_max_quot = DatabaseConfig::executeQuery($pdo, $sql_max_quot_num, [$quotation_number_prefix . '%']);
-    $last_quot_num_full = $stmt_max_quot->fetchColumn();
-
-    $next_seq_num = 1;
-    if ($last_quot_num_full) {
-        $last_seq_part = substr($last_quot_num_full, strlen($quotation_number_prefix));
+    $next_seq = 1;
+    if ($last_quotation) {
+        $last_seq_part = substr($last_quotation, strlen($quotation_prefix));
         $last_seq_digits = substr($last_seq_part, -3);
         if (is_numeric($last_seq_digits)) {
-            $next_seq_num = (int)$last_seq_digits + 1;
+            $next_seq = (int)$last_seq_digits + 1;
         }
     }
-    $quotation_number_suffix = sprintf("%03d", $next_seq_num);
-    $quotation_number = $quotation_number_prefix . $quotation_number_suffix;
+    $next_sequence = str_pad($next_seq, 3, '0', STR_PAD_LEFT);
+
+    return "SDL/{$shop_code_prefix}/{$customer_code_prefix}-{$next_sequence}";
+}
+// --- End Helper ---
 
 
-    // --- 4. Insert Quotation Header ---
-    $quotation_data = [
-        'quotation_number' => $quotation_number,
-        'shop_id' => $shop_id,
-        'customer_id' => $customer_id, // Can be null if not an existing/newly saved DB customer
-        'customer_name_override' => $customer_name_for_quotation,
-        'customer_address_override' => $customer_address_for_quotation,
-        'quotation_date' => $_POST['quotation_date'],
-        'company_tpin' => $_POST['company_tpin'] ?: $default_company_tpin,
-        'notes_general' => $_POST['general_note'] ?? null,
-        'delivery_period' => $_POST['delivery_period'] ?? null,
-        'payment_terms' => $_POST['payment_terms'] ?? null,
-        'quotation_validity_days' => !empty($_POST['quotation_validity_days']) ? (int)$_POST['quotation_validity_days'] : null,
-        'mra_wht_note' => (isset($_POST['include_mra_wht_note']) && $_POST['include_mra_wht_note'] === 'on') ? ($_POST['mra_wht_note_content'] ?? null) : null,
-        'apply_ppda_levy' => (isset($_POST['apply_ppda_levy']) && $_POST['apply_ppda_levy'] === 'on') ? 1 : 0,
-        'ppda_levy_percentage' => (isset($_POST['apply_ppda_levy']) && $_POST['apply_ppda_levy'] === 'on') ? 1.00 : 0.00, // Assuming fixed 1% if applied
-        'vat_percentage' => (float)$_POST['vat_percentage'],
-        'gross_total_amount' => (float)($_POST['hidden_gross_total_amount'] ?? 0), // These should come from hidden fields updated by JS
-        'ppda_levy_amount' => (float)($_POST['hidden_ppda_levy_amount'] ?? 0),
-        'amount_before_vat' => (float)($_POST['hidden_subtotal_before_vat'] ?? 0),
-        'vat_amount' => (float)($_POST['hidden_vat_amount'] ?? 0),
-        'total_net_amount' => (float)($_POST['hidden_total_net_amount'] ?? 0),
-        'status' => $_POST['submit_action'] === 'generate' ? 'Generated' : 'Draft', // 'submit_action' to be sent by JS
-        'created_by_user_id' => $current_user_id,
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
+try {
+    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->beginTransaction();
 
-    $sql_insert_quotation = "INSERT INTO quotations (
-        quotation_number, shop_id, customer_id, customer_name_override, customer_address_override, quotation_date, company_tpin, 
-        notes_general, delivery_period, payment_terms, quotation_validity_days, mra_wht_note, 
-        apply_ppda_levy, ppda_levy_percentage, vat_percentage, 
-        gross_total_amount, ppda_levy_amount, amount_before_vat, vat_amount, total_net_amount, 
-        status, created_by_user_id, created_at, updated_at
-    ) VALUES (
-        :quotation_number, :shop_id, :customer_id, :customer_name_override, :customer_address_override, :quotation_date, :company_tpin,
-        :notes_general, :delivery_period, :payment_terms, :quotation_validity_days, :mra_wht_note,
-        :apply_ppda_levy, :ppda_levy_percentage, :vat_percentage,
-        :gross_total_amount, :ppda_levy_amount, :amount_before_vat, :vat_amount, :total_net_amount,
-        :status, :created_by_user_id, :created_at, :updated_at
-    )";
-    DatabaseConfig::executeQuery($pdo, $sql_insert_quotation, $quotation_data);
-    $quotation_id = $pdo->lastInsertId();
+    // --- 1. Retrieve and Validate Basic Data ---
+    $shop_ids = isset($_POST['shops']) ? (array)$_POST['shops'] : [];
+    $customer_id = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT);
+    $quotation_date = filter_input(INPUT_POST, 'quotation_date', FILTER_SANITIZE_STRING);
+    $company_tpin = filter_input(INPUT_POST, 'company_tpin', FILTER_SANITIZE_STRING);
 
-    // --- 5. Insert Quotation Items ---
-    // Expecting items as an array: $_POST['items'][0]['description'], $_POST['items'][0]['quantity'], etc.
-    // Your JS needs to structure this data correctly upon form submission.
-    if (isset($_POST['items']) && is_array($_POST['items'])) {
-        $sql_insert_item = "INSERT INTO quotation_items (
-            quotation_id, product_id, item_number, description, image_path_override, 
-            quantity, unit_of_measurement, rate_per_unit, total_amount, 
-            created_by_user_id, created_at, updated_at
-        ) VALUES (
-            :quotation_id, :product_id, :item_number, :description, :image_path_override,
-            :quantity, :unit_of_measurement, :rate_per_unit, :total_amount,
-            :created_by_user_id, NOW(), NOW()
-        )";
-        
-        foreach ($_POST['items'] as $index => $item) {
-            if (empty($item['description']) && empty($item['product_id'])) continue; // Skip empty rows
+    // --- User ID - Retrieve from session ---
+    if (!isset($_SESSION['user_id'])) { // <------------------------ CHANGE THIS SECTION
+        // If user_id is not set in session, the user is not logged in properly.
+        throw new Exception("User not authenticated. Please log in.");
+    }
+    $created_by_user_id = $_SESSION['user_id']; // Use the actual logged-in user's ID
+    $updated_by_user_id = $created_by_user_id;  // On creation, updated_by is same as created_by
+    // --- End User ID ---
 
-            $item_data = [
-                'quotation_id' => $quotation_id,
-                'product_id' => !empty($item['product_id']) ? (int)$item['product_id'] : null,
-                'item_number' => $index + 1, // Or use a dedicated item_number field from the form
-                'description' => $item['description'],
-                'image_path_override' => $item['image_path_override'] ?? null, // Needs handling if file upload
-                'quantity' => (float)$item['quantity'],
-                'unit_of_measurement' => $item['unit'],
-                'rate_per_unit' => (float)$item['rate'],
-                'total_amount' => (float)$item['total'],
-                'created_by_user_id' => $current_user_id
-            ];
-            DatabaseConfig::executeQuery($pdo, $sql_insert_item, $item_data);
+    if (empty($shop_ids) || !$customer_id || empty($quotation_date)) {
+        throw new Exception("Shop, Customer, or Quotation Date is missing.");
+    }
+    $main_shop_id = $shop_ids[0];
+
+
+    // --- 2. Generate Quotation Number ---
+    // This function needs the $conn to fetch shop_code and customer_code
+    $quotation_number = generateQuotationNumber($conn, $shop_ids, $customer_id);
+
+    // --- 3. Handle Overrides ---
+    $customer_name_override = isset($_POST['customer_name_override_checkbox']) && !empty($_POST['customer_name_override']) ?
+                              filter_input(INPUT_POST, 'customer_name_override', FILTER_SANITIZE_STRING) : null;
+    $customer_address_override = isset($_POST['customer_address_override_checkbox']) && !empty($_POST['customer_address_override']) ?
+                                 filter_input(INPUT_POST, 'customer_address_override', FILTER_SANITIZE_STRING) : null;
+
+    // --- 4. Retrieve Optional Data ---
+    $notes_general = filter_input(INPUT_POST, 'notes_general', FILTER_SANITIZE_STRING);
+    $delivery_period = filter_input(INPUT_POST, 'delivery_period', FILTER_SANITIZE_STRING);
+    $payment_terms = filter_input(INPUT_POST, 'payment_terms', FILTER_SANITIZE_STRING);
+    $quotation_validity_days = filter_input(INPUT_POST, 'quotation_validity_days', FILTER_VALIDATE_INT, ['options' => ['default' => 30]]);
+    $mra_wht_note_content = filter_input(INPUT_POST, 'mra_wht_note_content', FILTER_SANITIZE_STRING);
+    $apply_ppda_levy = isset($_POST['apply_ppda_levy']) ? 1 : 0;
+    $ppda_levy_percentage = $apply_ppda_levy ? 1.00 : 0.00; // Assuming 1% if applied
+    $vat_percentage = filter_input(INPUT_POST, 'vat_percentage_used', FILTER_VALIDATE_FLOAT, ['options' => ['default' => 16.5]]); // Get VAT % used
+
+    // --- 5. Retrieve Calculated Totals from JS (passed via FormData) ---
+    // It's good to re-verify these on the server if business logic is critical, but for now, we trust client-side.
+    $gross_total_amount = filter_input(INPUT_POST, 'gross_total_amount', FILTER_VALIDATE_FLOAT);
+    $ppda_levy_amount_calc = filter_input(INPUT_POST, 'ppda_levy_amount', FILTER_VALIDATE_FLOAT);
+    $amount_before_vat_calc = filter_input(INPUT_POST, 'amount_before_vat', FILTER_VALIDATE_FLOAT);
+    $vat_amount_calc = filter_input(INPUT_POST, 'vat_amount', FILTER_VALIDATE_FLOAT);
+    $total_net_amount_calc = filter_input(INPUT_POST, 'total_net_amount', FILTER_VALIDATE_FLOAT);
+
+
+    // --- 6. Insert into `quotations` table ---
+    $sql_quotation = "INSERT INTO quotations (
+                        quotation_number, shop_id, customer_id, customer_name_override, customer_address_override,
+                        quotation_date, company_tpin, notes_general, delivery_period, payment_terms,
+                        quotation_validity_days, mra_wht_note_content, apply_ppda_levy, ppda_levy_percentage,
+                        vat_percentage, gross_total_amount, ppda_levy_amount, amount_before_vat,
+                        vat_amount, total_net_amount, status, created_by_user_id, updated_by_user_id,
+                        created_at, updated_at
+                      ) VALUES (
+                        :quotation_number, :shop_id, :customer_id, :customer_name_override, :customer_address_override,
+                        :quotation_date, :company_tpin, :notes_general, :delivery_period, :payment_terms,
+                        :quotation_validity_days, :mra_wht_note_content, :apply_ppda_levy, :ppda_levy_percentage,
+                        :vat_percentage, :gross_total_amount, :ppda_levy_amount, :amount_before_vat,
+                        :vat_amount, :total_net_amount, :status, :created_by_user_id, :updated_by_user_id,
+                        NOW(), NOW()
+                      )";
+
+    $stmt_quotation = $conn->prepare($sql_quotation);
+    $stmt_quotation->execute([
+        ':quotation_number' => $quotation_number,
+        ':shop_id' => $main_shop_id, // Using the first selected shop ID
+        ':customer_id' => $customer_id,
+        ':customer_name_override' => $customer_name_override,
+        ':customer_address_override' => $customer_address_override,
+        ':quotation_date' => $quotation_date,
+        ':company_tpin' => $company_tpin,
+        ':notes_general' => $notes_general,
+        ':delivery_period' => $delivery_period,
+        ':payment_terms' => $payment_terms,
+        ':quotation_validity_days' => $quotation_validity_days,
+        ':mra_wht_note_content' => $mra_wht_note_content,
+        ':apply_ppda_levy' => $apply_ppda_levy,
+        ':ppda_levy_percentage' => $ppda_levy_percentage,
+        ':vat_percentage' => $vat_percentage,
+        ':gross_total_amount' => $gross_total_amount,
+        ':ppda_levy_amount' => $ppda_levy_amount_calc,
+        ':amount_before_vat' => $amount_before_vat_calc,
+        ':vat_amount' => $vat_amount_calc,
+        ':total_net_amount' => $total_net_amount_calc,
+        ':status' => 'Draft', // Or 'Pending', 'Generated', etc.
+        ':created_by_user_id' => $created_by_user_id,
+        ':updated_by_user_id' => $updated_by_user_id
+    ]);
+
+    $quotation_id = $conn->lastInsertId();
+
+    // --- 7. Insert into `quotation_items` table ---
+    // You'll need a `quotation_items` table:
+    // quotation_id (FK), product_id (FK), item_name (if overridden or for historical record),
+    // quantity, unit_price, unit_of_measurement, total_price, item_image_path (optional)
+$sql_item = "INSERT INTO quotation_items (
+                quotation_id,
+                product_id,
+                item_number,
+                description,
+                image_path_override,
+                quantity,
+                unit_of_measurement, -- Changed from unit_of_measurement_id
+                rate_per_unit,
+                total_amount,
+                created_at,
+                updated_at,
+                created_by_user_id,
+                updated_by_user_id
+              ) VALUES (
+                :quotation_id,
+                :product_id,
+                :item_number,
+                :description,
+                :image_path_override,
+                :quantity,
+                :unit_of_measurement, -- Changed from :unit_of_measurement_id
+                :rate_per_unit,
+                :total_amount,
+                NOW(),
+                NOW(),
+                :created_by_user_id,
+                :updated_by_user_id
+              )";
+$stmt_item = $conn->prepare($sql_item);
+
+$item_product_ids = isset($_POST['product_id']) ? $_POST['product_id'] : [];
+$item_names_from_form = isset($_POST['item_name']) ? $_POST['item_name'] : []; // Original product name, can be stored in description or if you add a field for it.
+$item_descriptions_from_form = isset($_POST['item_description']) ? $_POST['item_description'] : [];
+$item_quantities = isset($_POST['item_quantity']) ? $_POST['item_quantity'] : [];
+$item_uom_ids_from_form = isset($_POST['item_uom']) ? $_POST['item_uom'] : []; // IMPORTANT: This should ideally be the ID from units_of_measurement table
+$item_unit_prices = isset($_POST['item_unit_price']) ? $_POST['item_unit_price'] : [];
+
+// Handle image uploads for items
+$item_image_uploads = isset($_FILES['item_image_upload']) ? $_FILES['item_image_upload'] : null;
+$item_number_counter = 0; // Initialize item number for this quotation
+
+for ($i = 0; $i < count($item_product_ids); $i++) {
+    if (empty($item_product_ids[$i]) && empty($item_descriptions_from_form[$i])) { // Skip if no product ID and no manual description
+        continue; // Skip potentially empty rows if item adding is very dynamic
+    }
+
+    $item_number_counter++; // Increment item number
+
+    // Sanitize and validate inputs for each item
+    $product_id = !empty($item_product_ids[$i]) ? filter_var($item_product_ids[$i], FILTER_VALIDATE_INT) : null;
+
+    // Use the specific item description entered, fallback to product name if description field was left linked to product's default
+    $description = filter_var($item_descriptions_from_form[$i], FILTER_SANITIZE_STRING);
+    if (empty($description) && $product_id && !empty($item_names_from_form[$i])) { // If no override description, use product name
+         $description = filter_var($item_names_from_form[$i], FILTER_SANITIZE_STRING);
+    }
+
+    $quantity = filter_var($item_quantities[$i], FILTER_VALIDATE_FLOAT);
+    // IMPORTANT: If item_uom_ids_from_form[$i] is not already an ID, you need to fetch it here.
+    // For example, if it's a code like 'PCS', you'd do:
+    // $uom_code = filter_var($item_uom_ids_from_form[$i], FILTER_SANITIZE_STRING);
+    // $stmt_uom = $conn->prepare("SELECT id FROM units_of_measurement WHERE code = ?");
+    // $stmt_uom->execute([$uom_code]);
+    // $unit_of_measurement_id = $stmt_uom->fetchColumn();
+    // If it's directly the ID from a select dropdown:
+$unit_of_measurement_for_db = filter_var($item_uom_ids_from_form[$i], FILTER_SANITIZE_STRING); // This will hold the string from the form
+
+
+    $rate_per_unit = filter_var($item_unit_prices[$i], FILTER_VALIDATE_FLOAT);
+    $total_amount = $quantity * $rate_per_unit;
+
+    $uploaded_image_path_override = null;
+    if ($item_image_uploads && isset($item_image_uploads['tmp_name'][$i]) && $item_image_uploads['error'][$i] === UPLOAD_ERR_OK) {
+        $upload_dir = 'uploads/quotation_item_images/'; // Create this directory and make it writable
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0775, true); // Use 0775 for better security if possible
+        }
+        // Sanitize filename, make it unique
+        $original_filename = basename($item_image_uploads['name'][$i]);
+        $safe_filename = preg_replace("/[^A-Za-z0-9._-]/", "", $original_filename); // Basic sanitization
+        $extension = pathinfo($safe_filename, PATHINFO_EXTENSION);
+        $filename_no_ext = pathinfo($safe_filename, PATHINFO_FILENAME);
+        $final_filename = $quotation_id . '_' . $item_number_counter . '_' . time() . '_' . $filename_no_ext . '.' . $extension;
+        $uploaded_image_path_override = $upload_dir . $final_filename;
+
+        if (!move_uploaded_file($item_image_uploads['tmp_name'][$i], $uploaded_image_path_override)) {
+            // Handle upload error, maybe log it but don't stop the whole process unless critical
+            error_log("Failed to upload item image: " . $item_image_uploads['name'][$i] . " for quotation " . $quotation_id);
+            $uploaded_image_path_override = null; // Reset if upload failed
         }
     }
 
-    DatabaseConfig::commitTransaction($pdo);
-    $response = [
-        'success' => true, 
-        'message' => 'Quotation ' . ($quotation_data['status'] === 'Draft' ? 'saved as draft' : 'generated') . ' successfully!',
-        'quotation_id' => $quotation_id,
-        'quotation_number' => $quotation_number
-    ];
+    $stmt_item->execute([
+        ':quotation_id' => $quotation_id,
+        ':product_id' => $product_id, // Can be NULL if it's a custom item without a product link
+        ':item_number' => $item_number_counter,
+        ':description' => $description,
+        ':image_path_override' => $uploaded_image_path_override,
+        ':quantity' => $quantity,
+        ':unit_of_measurement' => $unit_of_measurement_for_db, 
+        ':rate_per_unit' => $rate_per_unit,
+        ':total_amount' => $total_amount,
+        ':created_by_user_id' => $created_by_user_id,
+        ':updated_by_user_id' => $created_by_user_id // On creation, created_by and updated_by are the same
+    ]);
+}
+    // If you have a quotation_shops pivot table for many-to-many relationship:
+    // $stmt_quot_shop = $conn->prepare("INSERT INTO quotation_shops (quotation_id, shop_id) VALUES (:quotation_id, :shop_id)");
+    // foreach ($shop_ids as $s_id) {
+    //     $stmt_quot_shop->execute([':quotation_id' => $quotation_id, ':shop_id' => $s_id]);
+    // }
+
+
+    $conn->commit();
+    echo json_encode([
+        "success" => true,
+        "message" => "Quotation created successfully.",
+        "quotation_id" => $quotation_id,
+        "quotation_number" => $quotation_number
+    ]);
 
 } catch (PDOException $e) {
-    if ($pdo && $pdo->inTransaction()) {
-        DatabaseConfig::rollbackTransaction($pdo);
+    if ($conn && $conn->inTransaction()) {
+        $conn->rollBack();
     }
-    // db_connect.php already logs PDOExceptions
-    $response['message'] = 'Database error: ' . $e->getMessage(); // Debug
-    // $response['message'] = 'A database error occurred while saving the quotation.'; // Prod
+    error_log("PDO Error: " . $e->getMessage()); // Log the detailed PDO error
+    echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
 } catch (Exception $e) {
-    if ($pdo && $pdo->inTransaction()) {
-        DatabaseConfig::rollbackTransaction($pdo);
+    if ($conn && $conn->inTransaction()) {
+        $conn->rollBack();
     }
-    $response['message'] = $e->getMessage();
+    error_log("General Error: " . $e->getMessage()); // Log the general error
+    echo json_encode(["success" => false, "message" => "An error occurred: " . $e->getMessage()]);
 } finally {
-    DatabaseConfig::closeConnection($pdo);
-    echo json_encode($response);
-    exit;
+    $conn = null;
 }
 ?>
