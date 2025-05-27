@@ -3,7 +3,8 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role'])) {
+// Ensure the correct session variable is used for the role check
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['user_role'])) {
     header('Location: login.php'); // Adjust if your login page is elsewhere
     exit();
 }
@@ -16,7 +17,7 @@ $success_message = '';
 $quotation = null;
 $quotation_items_data = []; // For pre-filling the form
 
-$isAdmin = ($_SESSION['role'] === 'admin');
+$isAdmin = ($_SESSION['user_role'] === 'admin');
 $current_user_id = $_SESSION['user_id'];
 
 // Fetch lists for dropdowns
