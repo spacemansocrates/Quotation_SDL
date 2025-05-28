@@ -96,6 +96,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Out - QR Scanner</title>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -441,6 +442,90 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+          /* Add these styles to your existing CSS */
+        .qr-scanner-container {
+            position: relative;
+            margin: 10px 0;
+        }
+        
+        .camera-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .camera-button:hover {
+            background: #0056b3;
+        }
+        
+        .camera-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scanner-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        .scanner-video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background: #000;
+        }
+        
+        .scanner-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .close-scanner {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .scanner-status {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #007bff; }
     </style>
 </head>
 <body>
@@ -514,25 +599,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
                 <form method="POST" id="scanForm">
                     <input type="hidden" name="action" value="scan_out">
                     
-                    <div class="form-group">
-                        <label for="qr_code">QR Code *</label>
-                        <div class="qr-input-group">
-                            <input 
-                                type="text" 
-                                id="qr_code"
-                                name="qr_code" 
-                                placeholder="Scan QR code or enter manually" 
-                                required 
-                                autofocus
-                                autocomplete="off"
-                                value="<?php echo htmlspecialchars($_POST['qr_code'] ?? ''); ?>"
-                            >
-                            <span class="scan-icon">📷</span>
-                        </div>
-                        <small style="color: #666; font-size: 0.9em;">
-                            Focus on this field and scan the QR code, or type it manually
-                        </small>
-                    </div>
+                  <div class="form-group">
+        <label for="qr_code">QR Code *</label>
+        <div class="qr-input-group">
+            <input 
+                type="text" 
+                id="qr_code"
+                name="qr_code" 
+                placeholder="Scan QR code or enter manually" 
+                required 
+                autofocus
+                autocomplete="off"
+                value="<?php echo htmlspecialchars($_POST['qr_code'] ?? ''); ?>"
+            >
+            <div class="qr-scanner-container">
+                <button type="button" id="startScanBtn" class="camera-button">
+                    📷 Scan QR Code
+                </button>
+            </div>
+        </div>
+        <small style="color: #666; font-size: 0.9em;">
+            Click "Scan QR Code" to use camera, or type the code manually
+        </small>
+    </div>
                     
                     <div class="form-group">
                         <label for="quotation_id">Quotation ID (Optional)</label>
@@ -573,7 +662,20 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
                     <button type="button" class="btn btn-secondary" onclick="clearForm()">
                         🔄 Clear Form
                     </button>
+
                 </form>
+                  <div id="scannerModal" class="scanner-modal">
+        <div class="scanner-content">
+            <h3 style="text-align: center; margin-bottom: 15px;">📷 QR Code Scanner</h3>
+            <div class="scanner-status" id="scannerStatus">
+                <span class="info">Position QR code in front of camera</span>
+            </div>
+            <video id="scannerVideo" class="scanner-video" muted playsinline></video>
+            <div class="scanner-controls">
+                <button id="closeScannerBtn" class="close-scanner">❌ Close Scanner</button>
+            </div>
+        </div>
+    </div>
             </div>
             
             <div class="quick-stats">
@@ -607,6 +709,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
     </div>
 
     <script>
+        // QR Scanner variables
+        let qrScanner = null;
+        let isScanning = false;
+        
         // Track session scans
         <?php if ($scan_result): ?>
             <?php 
@@ -617,6 +723,113 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_stock' && isset($_GET['
             ?>
             document.getElementById('sessionScans').textContent = '<?php echo $_SESSION['scan_count']; ?>';
         <?php endif; ?>
+        
+        // Initialize QR Scanner
+        function initQRScanner() {
+            const video = document.getElementById('scannerVideo');
+            const statusElement = document.getElementById('scannerStatus');
+            
+            qrScanner = new QrScanner(
+                video,
+                result => {
+                    // QR code detected
+                    document.getElementById('qr_code').value = result.data;
+                    statusElement.innerHTML = '<span class="success">✅ QR Code detected!</span>';
+                    
+                    // Auto-close scanner after successful scan
+                    setTimeout(() => {
+                        closeScanner();
+                        checkProductInfo(); // Check the scanned product
+                    }, 1000);
+                },
+                {
+                    onDecodeError: error => {
+                        // This runs continuously while scanning, so we don't show errors
+                        // unless there's a real problem
+                    },
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+        }
+        
+        // Start QR Scanner
+        function startScanner() {
+            if (isScanning) return;
+            
+            const modal = document.getElementById('scannerModal');  
+            const statusElement = document.getElementById('scannerStatus');
+            const startBtn = document.getElementById('startScanBtn');
+            
+            // Check for camera support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Camera access is not supported in this browser. Please enter the QR code manually.');
+                return;
+            }
+            
+            statusElement.innerHTML = '<span class="info">📷 Starting camera...</span>';
+            modal.style.display = 'flex';
+            startBtn.disabled = true;
+            
+            if (!qrScanner) {
+                initQRScanner();
+            }
+            
+            qrScanner.start().then(() => {
+                isScanning = true;
+                statusElement.innerHTML = '<span class="info">🔍 Position QR code in front of camera</span>';
+                startBtn.textContent = '📷 Scanner Active';
+            }).catch(err => {
+                console.error('Scanner start error:', err);
+                statusElement.innerHTML = '<span class="error">❌ Camera access denied or not available</span>';
+                
+                // Show user-friendly error message
+                let errorMsg = 'Unable to access camera. ';
+                if (err.name === 'NotAllowedError') {
+                    errorMsg += 'Please allow camera access and try again.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMsg += 'No camera found on this device.';
+                } else {
+                    errorMsg += 'Please enter the QR code manually.';
+                }
+                
+                alert(errorMsg);
+                closeScanner();
+            });
+        }
+        
+        // Close QR Scanner
+        function closeScanner() {
+            const modal = document.getElementById('scannerModal');
+            const startBtn = document.getElementById('startScanBtn');
+            
+            modal.style.display = 'none';
+            startBtn.disabled = false;
+            startBtn.textContent = '📷 Scan QR Code';
+            
+            if (qrScanner && isScanning) {
+                qrScanner.stop();
+                isScanning = false;
+            }
+        }
+        
+        // Event Listeners
+        document.getElementById('startScanBtn').addEventListener('click', startScanner);
+        document.getElementById('closeScannerBtn').addEventListener('click', closeScanner);
+        
+        // Close scanner when clicking outside the content
+        document.getElementById('scannerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeScanner();
+            }
+        });
+        
+        // Close scanner with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isScanning) {
+                closeScanner();
+            }
+        });
         
         // Auto-submit form when QR code is scanned (assuming scanner adds newline)
         document.getElementById('qr_code').addEventListener('keypress', function(e) {
