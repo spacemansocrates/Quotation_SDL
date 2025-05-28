@@ -1,5 +1,5 @@
 <?php
-require_once 'Database.php';
+require_once 'database.php';
 require_once 'vendor/autoload.php'; // For QR code library
 
 use Endroid\QrCode\QrCode;
@@ -218,27 +218,85 @@ class InventoryManager {
     /**
      * Get stock report
      */
-    public function getStockReport() {
+  public function getStockReport($filter_status = 'all', $search_term = '', $sort_by = 'name', $sort_order = 'ASC') {
+        // 1. Initialize WHERE clauses and parameters
+        $where_clauses = [];
+        $params = [];
+
+        // 2. Add filter by status
+        if ($filter_status !== 'all') {
+            // Use the CASE statement's logic for filtering
+            $where_clauses[] = "CASE
+                                    WHEN COALESCE(i.quantity_in_stock, 0) = 0 THEN 'OUT_OF_STOCK'
+                                    WHEN COALESCE(i.quantity_in_stock, 0) <= COALESCE(i.minimum_stock_level, 0) THEN 'LOW_STOCK'
+                                    ELSE 'IN_STOCK'
+                                END = ?";
+            $params[] = $filter_status;
+        }
+
+        // 3. Add search term
+        if (!empty($search_term)) {
+            $search_term_like = '%' . $search_term . '%';
+            $where_clauses[] = "(p.name LIKE ? OR p.sku LIKE ? OR p.qr_code LIKE ?)";
+            $params[] = $search_term_like;
+            $params[] = $search_term_like;
+            $params[] = $search_term_like;
+        }
+
+        // 4. Construct the WHERE part of the query
+        $where_sql = '';
+        if (!empty($where_clauses)) {
+            $where_sql = ' WHERE ' . implode(' AND ', $where_clauses);
+        }
+
+        // 5. Validate and set sorting parameters
+        // IMPORTANT: Only allow predefined columns for sorting to prevent SQL Injection
+        $allowed_sort_columns = ['name', 'sku', 'current_stock', 'total_received', 'total_sold', 'minimum_stock_level', 'stock_status'];
+        $allowed_sort_order = ['ASC', 'DESC'];
+
+        if (!in_array($sort_by, $allowed_sort_columns)) {
+            $sort_by = 'name'; // Default to 'name' if invalid
+        }
+        if (!in_array(strtoupper($sort_order), $allowed_sort_order)) {
+            $sort_order = 'ASC'; // Default to 'ASC' if invalid
+        }
+
+        // If sorting by 'stock_status', we need to use the CASE statement again
+        $order_by_column = $sort_by;
+        if ($sort_by === 'stock_status') {
+            $order_by_column = "CASE
+                                    WHEN COALESCE(i.quantity_in_stock, 0) = 0 THEN 'OUT_OF_STOCK'
+                                    WHEN COALESCE(i.quantity_in_stock, 0) <= COALESCE(i.minimum_stock_level, 0) THEN 'LOW_STOCK'
+                                    ELSE 'IN_STOCK'
+                                END";
+        }
+
+
         $stmt = $this->conn->prepare("
-            SELECT 
+            SELECT
                 p.id,
                 p.name,
                 p.sku,
                 p.qr_code,
+                p.description, -- Added description as it's used in stock_report.php
                 COALESCE(i.quantity_in_stock, 0) as current_stock,
                 COALESCE(i.total_received, 0) as total_received,
                 COALESCE(i.total_sold, 0) as total_sold,
                 COALESCE(i.minimum_stock_level, 0) as minimum_stock_level,
-                CASE 
-                    WHEN COALESCE(i.quantity_in_stock, 0) = 0 THEN 'OUT_OF_STOCK' /* Check for 0 first */
+                CASE
+                    WHEN COALESCE(i.quantity_in_stock, 0) = 0 THEN 'OUT_OF_STOCK'
                     WHEN COALESCE(i.quantity_in_stock, 0) <= COALESCE(i.minimum_stock_level, 0) THEN 'LOW_STOCK'
                     ELSE 'IN_STOCK'
                 END as stock_status
-            FROM products p 
+            FROM products p
             LEFT JOIN inventory_stock i ON p.id = i.product_id
-            ORDER BY p.name
-        ");
-        $stmt->execute();
+            " . $where_sql . "
+            ORDER BY " . $order_by_column . " " . $sort_order
+        );
+
+        // 6. Execute the statement with parameters
+        $stmt->execute($params);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
