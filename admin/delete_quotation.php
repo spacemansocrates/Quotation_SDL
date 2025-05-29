@@ -3,7 +3,8 @@
 session_start();
 
 // Check if user is logged in and has appropriate role
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+// Ensure session uses the 'user_role' key as set during login
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     $_SESSION['error_message'] = "You must be logged in to perform this action.";
     header('Location: login.php'); // Adjust to your login page
     exit();
@@ -14,7 +15,7 @@ require_once __DIR__ . '/../includes/db_connect.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quotation_id = isset($_POST['quotation_id']) ? (int)$_POST['quotation_id'] : 0;
     $current_user_id = $_SESSION['user_id'];
-    $isAdmin = ($_SESSION['role'] === 'admin');
+    $isAdmin = ($_SESSION['user_role'] === 'admin');
 
     if ($quotation_id <= 0) {
         $_SESSION['error_message'] = "Invalid quotation ID for deletion.";
