@@ -231,73 +231,100 @@ try {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($quotations)): ?>
-                                <tr>
-                                    <td colspan="<?php echo $isAdmin ? '7' : '6'; ?>" class="text-center py-3">No quotations found.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($quotations as $quotation): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($quotation['quotation_number']); ?></td>
-                                        <td><?php echo date('d M Y', strtotime($quotation['quotation_date'])); ?></td>
-                                        <td><?php echo htmlspecialchars($quotation['customer_name'] ?? $quotation['customer_name_override'] ?? 'N/A'); ?></td>
-                                        <td><?php echo number_format($quotation['total_net_amount'], 2); ?></td>
-                                        <td>
-                                            <?php
-                                                $statusClass = '';
-                                                switch ($quotation['status']) {
-                                                    case 'Draft':
-                                                        $statusClass = 'bg-secondary';
-                                                        break;
-                                                    case 'Submitted':
-                                                        $statusClass = 'bg-primary';
-                                                        break;
-                                                    case 'Approved':
-                                                        $statusClass = 'bg-success';
-                                                        break;
-                                                    case 'Rejected':
-                                                        $statusClass = 'bg-danger';
-                                                        break;
-                                                    default:
-                                                        $statusClass = 'bg-secondary';
-                                                }
-                                            ?>
-                                            <span class="badge status-badge <?php echo $statusClass; ?>">
-                                                <?php echo htmlspecialchars($quotation['status']); ?>
-                                            </span>
-                                        </td>
-                                        <?php if ($isAdmin): ?>
-                                            <td><?php echo htmlspecialchars($quotation['created_by_username']); ?></td>
-                                        <?php endif; ?>
-                                        <td class="actions-column">
-                                            <div class="btn-group">
-                                                <a href="view_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-primary" title="View">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <?php if ($quotation['status'] === 'Draft' || $isAdmin): ?>
-                                                    <a href="edit_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-secondary" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                                <a href="print_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-success" title="Print" target="_blank">
-                                                    <i class="bi bi-printer"></i>
-                                                </a>
-                                                <?php if ($quotation['status'] === 'Draft' && ($isAdmin || $quotation['created_by_user_id'] == $userId)): ?>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-quotation" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteQuotationModal" 
-                                                        data-quotation-id="<?php echo $quotation['id']; ?>"
-                                                        data-quotation-number="<?php echo htmlspecialchars($quotation['quotation_number']); ?>"
-                                                        title="Delete">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
+    <?php if (empty($quotations)): ?>
+        <tr>
+            <td colspan="<?php echo $isAdmin ? '8' : '7'; ?>" class="text-center py-3">No quotations found.</td>
+        </tr>
+    <?php else: ?>
+        <?php foreach ($quotations as $quotation): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($quotation['quotation_number']); ?></td>
+                <td><?php echo date('d M Y', strtotime($quotation['quotation_date'])); ?></td>
+                <td><?php echo htmlspecialchars($quotation['customer_name'] ?? $quotation['customer_name_override'] ?? 'N/A'); ?></td>
+                <td><?php echo number_format($quotation['total_net_amount'], 2); ?></td>
+                <td>
+                    <?php
+                        $statusClass = '';
+                        switch ($quotation['status']) {
+                            case 'Draft':
+                                $statusClass = 'bg-secondary';
+                                break;
+                            case 'Submitted':
+                                $statusClass = 'bg-primary';
+                                break;
+                            case 'Approved':
+                                $statusClass = 'bg-success';
+                                break;
+                            case 'Rejected':
+                                $statusClass = 'bg-danger';
+                                break;
+                            default:
+                                $statusClass = 'bg-secondary';
+                        }
+                    ?>
+                    <span class="badge status-badge <?php echo $statusClass; ?>">
+                        <?php echo htmlspecialchars($quotation['status']); ?>
+                    </span>
+                </td>
+                <?php if ($isAdmin): ?>
+                    <td><?php echo htmlspecialchars($quotation['created_by_username']); ?></td>
+                <?php endif; ?>
+                
+                <!-- Invoice Action Column -->
+                <td>
+                    <?php if ($quotation['status'] === 'Approved' && is_null($quotation['generated_invoice_id'])): ?>
+                        <a href="create_invoice_from_quote.php?quote_id=<?php echo $quotation['id']; ?>" 
+                           class="btn btn-success btn-sm" title="Create Invoice">
+                            <i class="bi bi-file-earmark-plus"></i> Create Invoice
+                        </a>
+                    <?php elseif (!is_null($quotation['generated_invoice_id'])): ?>
+                        <a href="view_invoice.php?id=<?php echo $quotation['generated_invoice_id']; ?>" 
+                           class="btn btn-info btn-sm" title="View Generated Invoice">
+                            <i class="bi bi-file-earmark-text"></i> Invoice #<?php echo $quotation['generated_invoice_id']; ?>
+                        </a>
+                    <?php else: ?>
+                        <span class="text-muted small">
+                            <?php echo ucfirst(strtolower($quotation['status'])); ?>
+                        </span>
+                    <?php endif; ?>
+                </td>
+                
+                <!-- Actions Column -->
+                <td class="actions-column">
+                    <div class="btn-group" role="group">
+                        <a href="view_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                           class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        
+                        <?php if ($quotation['status'] === 'Draft' || $isAdmin): ?>
+                            <a href="edit_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                               class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        <?php endif; ?>
+                        
+                        <a href="print_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                           class="btn btn-sm btn-outline-success" title="Print" target="_blank">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                        
+                        <?php if ($quotation['status'] === 'Draft' && ($isAdmin || $quotation['created_by_user_id'] == $userId)): ?>
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-quotation" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteQuotationModal" 
+                                data-quotation-id="<?php echo $quotation['id']; ?>"
+                                data-quotation-number="<?php echo htmlspecialchars($quotation['quotation_number']); ?>"
+                                title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
                     </table>
                 </div>
             </div>

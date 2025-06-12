@@ -1,0 +1,427 @@
+/* assets/css/invoice.css */
+
+/* Basic Reset & Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 960px;
+    margin: 30px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.2em;
+    text-align: center;
+    color: #0056b3;
+}
+
+h2 {
+    font-size: 1.8em;
+    border-bottom: 2px solid #e2e6ea;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 1.4em;
+    color: #34495e;
+    margin-bottom: 15px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cdd;
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="number"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.1);
+}
+
+/* Layout helpers for forms */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Space between columns */
+    margin-bottom: 10px; /* Space between rows of form groups */
+}
+
+.col-half {
+    flex: 1 1 calc(50% - 10px); /* 50% width minus half the gap */
+    min-width: 280px; /* Ensure columns don't get too small on smaller screens */
+}
+
+.col-full {
+    flex: 1 1 100%;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-primary, .btn-info, .add-item-btn { /* Changed add-item-btn to primary look */
+    background-color: #007bff;
+    color: white;
+}
+.btn-primary:hover, .btn-info:hover, .add-item-btn:hover {
+    background-color: #0056b3;
+}
+
+.btn-success, .btn-submit { /* Submit button */
+    background-color: #28a745;
+    color: white;
+}
+.btn-success:hover, .btn-submit:hover {
+    background-color: #218838;
+}
+
+.btn-warning, .btn-edit {
+    background-color: #ffc107;
+    color: #333;
+    border-color: #ffc107;
+}
+.btn-warning:hover, .btn-edit:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+}
+
+.btn-danger, .btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-danger:hover, .btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary, .btn-back {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-secondary:hover, .btn-back:hover {
+    background-color: #5a6268;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85em;
+}
+
+/* Table Styles */
+.table, .item-table, .payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-radius: 5px;
+    overflow: hidden; /* For rounded corners on tables */
+}
+
+.table th, .table td,
+.item-table th, .item-table td,
+.payment-table th, .payment-table td {
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    text-align: left;
+}
+
+.table thead th,
+.item-table thead th,
+.payment-table thead th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+    color: #444;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+/* Specific item table styles */
+.item-table .item-row input[type="text"],
+.item-table .item-row input[type="number"],
+.item-table .item-row textarea {
+    width: calc(100% - 10px); /* Adjust for padding/border */
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.95em;
+}
+
+.item-table .item-row textarea {
+    resize: vertical;
+    min-height: 40px;
+}
+
+.item-actions button {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.3em;
+    padding: 0 5px;
+    transition: color 0.2s ease;
+}
+.item-actions button:hover {
+    color: #a71d2a;
+}
+
+/* Totals Summary Section */
+.total-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #eaf2f8; /* Light blue background */
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%; /* Or fixed width like 350px for alignment */
+    max-width: 350px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #cfe2f3; /* Lighter dashed border */
+    font-size: 1.1em;
+}
+
+.total-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-top: 10px;
+    color: #0056b3;
+}
+
+.total-row span:first-child {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Alerts/Messages */
+.alert {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Pagination */
+.pagination {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.pagination a, .pagination span {
+    display: inline-block;
+    padding: 8px 14px;
+    margin: 0 4px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #007bff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pagination a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination span.current-page {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+    cursor: default;
+}
+
+/* Filter Form */
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 15px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    align-items: flex-end; /* Align inputs/selects at the bottom */
+}
+
+.filter-form div {
+    flex: 1 1 auto; /* Allow items to grow/shrink */
+    min-width: 150px; /* Minimum width for filter elements */
+}
+
+.filter-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.filter-form input[type="text"],
+.filter-form select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Specific styles for Invoice View */
+.invoice-details, .customer-shop-details, .item-details, .payment-details, .totals-summary {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.customer-shop-details {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.customer-shop-details .col {
+    flex: 1 1 calc(50% - 15px); /* Half width minus half the gap */
+    min-width: 300px;
+}
+
+.customer-shop-details p {
+    margin: 6px 0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: white;
+    margin-left: 10px;
+    text-transform: uppercase;
+}
+
+/* Status Colors */
+.status-Draft { background-color: #6c757d; } /* Gray */
+.status-Finalized { background-color: #007bff; } /* Blue */
+.status-Paid { background-color: #28a745; } /* Green */
+.status-PartiallyPaid { background-color: #ffc107; color: #333; } /* Yellow */
+.status-Overdue { background-color: #dc3545; } /* Red */
+.status-Cancelled { background-color: #343a40; } /* Dark Gray */
+
+/* Product search suggestions */
+.product-suggestions {
+    position: absolute;
+    border: 1px solid #ddd;
+    background-color: white;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: calc(100% - 2px); /* Match input width */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: none; /* Hidden by default */
+}
+
+.product-suggestions .suggestion-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.product-suggestions .suggestion-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Ensure product search input is within a relative container for absolute positioning of suggestions */
+.item-row td:nth-child(3) { /* Targeting the cell containing the search input */
+    position: relative;
+}

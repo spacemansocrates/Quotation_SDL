@@ -55,7 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         $pdo->beginTransaction();
-
+// Example in PHP before a DELETE query
+$userId = $_SESSION['user_id']; // Get the current logged-in user's ID
+$pdo->exec("SET @app_user_id = " . (int)$userId);
+$statement = $pdo->prepare("DELETE FROM invoices WHERE id = :id");
+$statement->execute(['id' => $invoiceId]);
         // 1. Delete from quotation_items
         DatabaseConfig::executeQuery(
             $pdo,

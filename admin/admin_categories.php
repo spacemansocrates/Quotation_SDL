@@ -263,7 +263,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
-require_once __DIR__ . '/../includes/nav.php';
+require_once __DIR__ . '/../includes/quonav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

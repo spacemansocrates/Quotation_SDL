@@ -649,3 +649,550 @@ Trace: #0 C:\wamp64\www\supplies\includes\db_connect.php(106): PDO->prepare('\r\
 #1 C:\wamp64\www\supplies\admin\print_quotation.php(70): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
 #2 {main}
 
+[2025-06-05 08:58:13] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":575000,":ppda_amount":5750,":pre_vat":580750,":vat_amount":94875,":net_total":675625,":status":"Sent",":updater_id":1,":invoice_id":4}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-05 11:49:14] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            i.id AS invoice_id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.total_net_amount AS original_amount,
+            COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+        WHERE i.customer_id = :customer_id 
+          AND i.invoice_date <= :as_of_date -- Include invoices issued on or before as_of_date
+          -- AND i.status NOT IN ('Paid', 'Cancelled') -- Simpler: check balance later
+        GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+        HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005 -- Only those with a balance
+        ORDER BY i.invoice_date ASC, i.id ASC
+    
+Params: {":customer_id":1,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(85): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-05 12:01:43] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            i.id AS invoice_id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.total_net_amount AS original_amount,
+            COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+        WHERE i.customer_id = :customer_id 
+          AND i.invoice_date <= :as_of_date -- Include invoices issued on or before as_of_date
+          -- AND i.status NOT IN ('Paid', 'Cancelled') -- Simpler: check balance later
+        GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+        HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005 -- Only those with a balance
+        ORDER BY i.invoice_date ASC, i.id ASC
+    
+Params: {":customer_id":1,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(85): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-05 12:01:46] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            i.id AS invoice_id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.total_net_amount AS original_amount,
+            COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+        WHERE i.customer_id = :customer_id 
+          AND i.invoice_date <= :as_of_date -- Include invoices issued on or before as_of_date
+          -- AND i.status NOT IN ('Paid', 'Cancelled') -- Simpler: check balance later
+        GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+        HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005 -- Only those with a balance
+        ORDER BY i.invoice_date ASC, i.id ASC
+    
+Params: {":customer_id":1,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(85): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-05 12:03:07] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+                SELECT 
+                    i.id AS invoice_id, i.invoice_number, i.invoice_date, i.due_date,
+                    i.total_net_amount AS original_amount,
+                    COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+                FROM invoices i
+                LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+                WHERE i.customer_id = :customer_id 
+                  AND i.invoice_date <= :as_of_date
+                GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+                HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005
+                ORDER BY i.invoice_date ASC, i.id ASC
+            
+Params: {":customer_id":4,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\customer_statement.php(62): DatabaseConfig::executeQuery(Object(PDO), '\r\n             ...', Array)
+#2 {main}
+
+[2025-06-05 12:03:21] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+                SELECT 
+                    i.id AS invoice_id, i.invoice_number, i.invoice_date, i.due_date,
+                    i.total_net_amount AS original_amount,
+                    COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+                FROM invoices i
+                LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+                WHERE i.customer_id = :customer_id 
+                  AND i.invoice_date <= :as_of_date
+                GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+                HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005
+                ORDER BY i.invoice_date ASC, i.id ASC
+            
+Params: {":customer_id":1,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\customer_statement.php(62): DatabaseConfig::executeQuery(Object(PDO), '\r\n             ...', Array)
+#2 {main}
+
+[2025-06-05 12:03:26] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+                SELECT 
+                    i.id AS invoice_id, i.invoice_number, i.invoice_date, i.due_date,
+                    i.total_net_amount AS original_amount,
+                    COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+                FROM invoices i
+                LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+                WHERE i.customer_id = :customer_id 
+                  AND i.invoice_date <= :as_of_date
+                GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+                HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005
+                ORDER BY i.invoice_date ASC, i.id ASC
+            
+Params: {":customer_id":3,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\customer_statement.php(62): DatabaseConfig::executeQuery(Object(PDO), '\r\n             ...', Array)
+#2 {main}
+
+[2025-06-05 12:03:29] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+                SELECT 
+                    i.id AS invoice_id, i.invoice_number, i.invoice_date, i.due_date,
+                    i.total_net_amount AS original_amount,
+                    COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+                FROM invoices i
+                LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+                WHERE i.customer_id = :customer_id 
+                  AND i.invoice_date <= :as_of_date
+                GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+                HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005
+                ORDER BY i.invoice_date ASC, i.id ASC
+            
+Params: {":customer_id":2,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\customer_statement.php(62): DatabaseConfig::executeQuery(Object(PDO), '\r\n             ...', Array)
+#2 {main}
+
+[2025-06-05 12:04:12] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+                SELECT 
+                    i.id AS invoice_id, i.invoice_number, i.invoice_date, i.due_date,
+                    i.total_net_amount AS original_amount,
+                    COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+                FROM invoices i
+                LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+                WHERE i.customer_id = :customer_id 
+                  AND i.invoice_date <= :as_of_date
+                GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+                HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005
+                ORDER BY i.invoice_date ASC, i.id ASC
+            
+Params: {":customer_id":4,":as_of_date":"2025-06-05"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\customer_statement.php(62): DatabaseConfig::executeQuery(Object(PDO), '\r\n             ...', Array)
+#2 {main}
+
+[2025-06-06 18:52:57] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":99500,":ppda_amount":995,":pre_vat":100495,":vat_amount":16417.5,":net_total":116912.5,":status":"Partially Paid",":updater_id":1,":invoice_id":5}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\ini\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-10 07:49:51] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":4021500,":ppda_amount":40215,":pre_vat":4061715,":vat_amount":663547.5,":net_total":4725262.5,":status":"Partially Paid",":updater_id":1,":invoice_id":5}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-10 07:50:27] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":4021500,":ppda_amount":40215,":pre_vat":4061715,":vat_amount":663547.5,":net_total":4725262.5,":status":"Partially Paid",":updater_id":1,":invoice_id":5}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-10 08:59:48] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            i.id AS invoice_id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.total_net_amount AS original_amount,
+            COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+        WHERE i.customer_id = :customer_id 
+          AND i.invoice_date <= :as_of_date -- Include invoices issued on or before as_of_date
+          -- AND i.status NOT IN ('Paid', 'Cancelled') -- Simpler: check balance later
+        GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+        HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005 -- Only those with a balance
+        ORDER BY i.invoice_date ASC, i.id ASC
+    
+Params: {":customer_id":2,":as_of_date":"2025-06-10"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(85): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 10:07:51] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            i.id AS invoice_id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.total_net_amount AS original_amount,
+            COALESCE(SUM(p.amount_paid), 0) AS total_paid_as_of_date
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id AND p.payment_date <= :as_of_date
+        WHERE i.customer_id = :customer_id 
+          AND i.invoice_date <= :as_of_date -- Include invoices issued on or before as_of_date
+          -- AND i.status NOT IN ('Paid', 'Cancelled') -- Simpler: check balance later
+        GROUP BY i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_net_amount
+        HAVING (i.total_net_amount - COALESCE(SUM(p.amount_paid), 0)) > 0.005 -- Only those with a balance
+        ORDER BY i.invoice_date ASC, i.id ASC
+    
+Params: {":customer_id":2,":as_of_date":"2025-08-21"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(85): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:06:18] Query Execution Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'supplies.credit_notes' doesn't exist
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+            -
+            (SELECT COALESCE(SUM(amount), 0) FROM credit_notes WHERE customer_id = :cid AND issue_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-07-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(106): PDO->prepare('\r\n        SELEC...')
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(87): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:11:02] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-07-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:12:27] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":1,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:14:23] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":1,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:17:37] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":1,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:17:38] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":1,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:18:08] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":1,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:18:14] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:21:43] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:21] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:22] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:23] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:23] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:23] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 12:25:26] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: 
+        SELECT 
+            (SELECT COALESCE(SUM(total_net_amount), 0) FROM invoices WHERE customer_id = :cid AND invoice_date < :s_date)
+            - 
+            (SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE customer_id = :cid AND payment_date < :s_date)
+        AS opening_balance
+    
+Params: {":cid":2,":s_date":"2025-06-01"}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\customer_statement.php(82): DatabaseConfig::executeQuery(Object(PDO), '\r\n        SELEC...', Array)
+#2 {main}
+
+[2025-06-10 13:58:14] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":1000000,":ppda_amount":10000,":pre_vat":1010000,":vat_amount":165000,":net_total":1175000,":status":"Draft",":updater_id":1,":invoice_id":7}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-10 13:58:24] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":1,":ppda_perc":1,":vat_perc":16.5,":gross_total":1000000,":ppda_amount":10000,":pre_vat":1010000,":vat_amount":165000,":net_total":1175000,":status":"Draft",":updater_id":1,":invoice_id":7}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+
+[2025-06-11 12:20:46] Query Execution Error: SQLSTATE[HY093]: Invalid parameter number
+Query: UPDATE invoices SET 
+            shop_id = :shop_id, customer_id = :customer_id, 
+            customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
+            notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
+            apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
+            gross_total_amount = :gross_total, 
+            ppda_levy_amount = :ppda_amount,       -- Corrected from previous
+            amount_before_vat = :pre_vat,          -- Corrected from previous
+            vat_amount = :vat_amount,              -- Corrected from previous
+            total_net_amount = :net_total,         -- Corrected from previous
+            status = :status, 
+            updated_by_user_id = :updater_id, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :invoice_id
+Params: {":apply_ppda":0,":ppda_perc":0,":vat_perc":16.5,":gross_total":375000,":ppda_amount":0,":pre_vat":375000,":vat_amount":61875,":net_total":436875,":status":"Draft",":updater_id":1,":invoice_id":10}
+Trace: #0 C:\wamp64\www\Quotation_SDL\includes\db_connect.php(107): PDOStatement->execute(Array)
+#1 C:\wamp64\www\Quotation_SDL\admin\edit_invoice.php(181): DatabaseConfig::executeQuery(Object(PDO), 'UPDATE invoices...', Array)
+#2 {main}
+

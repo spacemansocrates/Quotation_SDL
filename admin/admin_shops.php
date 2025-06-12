@@ -384,7 +384,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
-require_once __DIR__ . '/../includes/nav.php';
+require_once __DIR__ . '/../includes/quonav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -403,7 +403,7 @@ require_once __DIR__ . '/../includes/nav.php';
 </head>
 <body>
     <div class="container">
-        <?php require_once __DIR__ . '/../includes/nav.php'; // Include navigation ?>
+        <?php require_once __DIR__ . '/../includes/quonav.php'; // Include navigation ?>
 
         <h1>Manage Shops</h1>
 
