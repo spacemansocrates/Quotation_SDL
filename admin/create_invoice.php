@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <input type="text" name="item_name[]" class="item-name" placeholder="Item Name / Product Name" required>
             <input type="text" name="item_description[]" class="item-description" placeholder="Description (Optional)">
             <input type="number" name="item_quantity[]" class="item-quantity" value="1" min="0.01" step="0.01" placeholder="Qty" style="width: 70px;" required>
-            <input type="text" name="item_uom[]" class="item-uom" placeholder="UoM">
+           <input type="text" name="item_uom[]" class="item-uom" placeholder="UoM" value="PCS">
             <input type="number" name="item_unit_price[]" class="item-unit-price" step="0.01" placeholder="Unit Price" required>
             <input type="text" name="item_total[]" class="item-total" readonly placeholder="Total">
             <span class="remove-item" data-id="${itemCounter}" style="cursor:pointer; color:red;">&times;</span>

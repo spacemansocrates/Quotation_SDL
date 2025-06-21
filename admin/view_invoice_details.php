@@ -243,7 +243,7 @@ try {
                                         <p class="mb-1"><strong>Last Updated:</strong> <?php echo date('d M Y H:i', strtotime($invoice['updated_at'])); ?></p>
                                     <?php endif; ?>
                                     <?php if (!empty($invoice['quotation_id'])): ?>
-                                        <p class="mb-1"><strong>Original Quotation:</strong> <a href="view_quotation_details.php?id=<?php echo $invoice['quotation_id']; ?>">View Quotation #<?php echo $invoice['quotation_id']; ?></a></p>
+                                        <p class="mb-1"><strong>Original Quotation:</strong> <a href="view_quotation.php?id=<?php echo $invoice['quotation_id']; ?>">View Quotation #<?php echo $invoice['quotation_id']; ?></a></p>
                                     <?php endif; ?>
                                 </div>
                             </div>

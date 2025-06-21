@@ -19,16 +19,21 @@ try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Fetch Quotation Details
-    $sql_quotation = "SELECT q.*, 
-                      c.name AS customer_name, c.customer_code, 
-                      c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
-                      s.name AS shop_name, s.shop_code, 
-                      u.username AS created_by_username
-                      FROM quotations q
-                      LEFT JOIN customers c ON q.customer_id = c.id
-                      LEFT JOIN shops s ON q.shop_id = s.id
-                      LEFT JOIN users u ON q.created_by_user_id = u.id
-                      WHERE q.id = :quotation_id";
+$sql_quotation = "SELECT q.*, 
+                    c.name AS customer_name, c.customer_code, 
+                    c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
+                    s.name AS shop_name, s.shop_code, 
+                    s.address_line1 AS shop_address_line1,   -- ADD THIS
+                    s.address_line2 AS shop_address_line2,   -- ADD THIS IF YOU HAVE IT
+                    s.city AS shop_city,                     -- ADD THIS IF YOU HAVE IT
+                    s.phone AS shop_phone,                   -- ADD THIS IF YOU HAVE IT
+                    s.email AS shop_email,                   -- ADD THIS IF YOU HAVE IT
+                    u.username AS created_by_username
+                    FROM quotations q
+                    LEFT JOIN customers c ON q.customer_id = c.id
+                    LEFT JOIN shops s ON q.shop_id = s.id
+                    LEFT JOIN users u ON q.created_by_user_id = u.id
+                    WHERE q.id = :quotation_id";
     $stmt_quotation = $conn->prepare($sql_quotation);
     $stmt_quotation->bindParam(':quotation_id', $quotation_id, PDO::PARAM_INT);
     $stmt_quotation->execute();
@@ -38,15 +43,15 @@ try {
 
     // Fetch Quotation Items
     $sql_items = "SELECT qi.*, 
-                  p.name as product_name, 
-                  p.sku as product_sku, 
-                  p.default_image_path, /* Fetch default image path from products table */
-                  uom.name as uom_name
-                  FROM quotation_items qi
-                  LEFT JOIN products p ON qi.product_id = p.id
-                  LEFT JOIN units_of_measurement uom ON qi.unit_of_measurement = uom.name
-                  WHERE qi.quotation_id = :quotation_id 
-                  ORDER BY qi.item_number ASC";
+                    p.name as product_name, 
+                    p.sku as product_sku, 
+                    p.default_image_path, /* Fetch default image path from products table */
+                    uom.name as uom_name
+                    FROM quotation_items qi
+                    LEFT JOIN products p ON qi.product_id = p.id
+                    LEFT JOIN units_of_measurement uom ON qi.unit_of_measurement = uom.name
+                    WHERE qi.quotation_id = :quotation_id 
+                    ORDER BY qi.item_number ASC";
     $stmt_items = $conn->prepare($sql_items);
     $stmt_items->bindParam(':quotation_id', $quotation_id, PDO::PARAM_INT);
     $stmt_items->execute();
@@ -62,10 +67,25 @@ try {
 $conn = null;
 
 // Company information - replace with database values or define constants
-$company_name = $company_info['company_name'] ?? 'Supplies Direct Limited';
-$company_address = $company_info['address_line1'] ?? 'P.O.BOX NO.5206, LIMBE, MALAWI';
-$company_phone = $company_info['phone'] ?? '0991168991 / 0997398298';
-$company_email = $company_info['email'] ?? 'info@suppliesdirectmw.com';
+// Use shop information if available, otherwise fallback to default company info
+$display_company_name = $quotation['shop_name'] ?? ($company_info['company_name'] ?? 'Supplies Direct Limited');
+$display_company_address = '';
+if (!empty($quotation['shop_address_line1'])) {
+    $display_company_address .= $quotation['shop_address_line1'];
+}
+if (!empty($quotation['shop_address_line2'])) {
+    $display_company_address .= (!empty($display_company_address) ? ', ' : '') . $quotation['shop_address_line2'];
+}
+if (!empty($quotation['shop_city'])) {
+    $display_company_address .= (!empty($display_company_address) ? ', ' : '') . $quotation['shop_city'];
+}
+// Fallback to company_info if shop address is not available
+if (empty($display_company_address)) {
+    $display_company_address = $company_info['address_line1'] ?? 'P.O.BOX NO.5206, LIMBE, MALAWI';
+}
+
+$display_company_phone = $quotation['shop_phone'] ?? ($company_info['phone'] ?? '0991168991 / 0997398298');
+$display_company_email = $quotation['shop_email'] ?? ($company_info['email'] ?? 'info@suppliesdirectmw.com');
 $company_tpin = $company_info['tpin'] ?? '70030009';
 $company_logo = $company_info['logo_path'] ?? 'images/logo.png';
 $company_signature = $company_info['signature_path'] ?? 'images/signature.png';
@@ -232,7 +252,7 @@ $summary_label_colspan = $include_images ? 5 : 4;
   <div class="header">
     <img src="<?php echo htmlspecialchars($company_logo); ?>" alt="Company Logo">
     <div class="contact-line">
-      <?php echo htmlspecialchars($company_address); ?> — CELL NO: <?php echo htmlspecialchars($company_phone); ?> — Email: <?php echo htmlspecialchars($company_email); ?>
+      <?php echo htmlspecialchars($display_company_address); ?> — CELL NO: <?php echo htmlspecialchars($display_company_phone); ?> — Email: <?php echo htmlspecialchars($display_company_email); ?>
     </div>
   </div>
   <hr>
@@ -281,9 +301,9 @@ $summary_label_colspan = $include_images ? 5 : 4;
             <?php if (!($item_image_path && file_exists($item_image_path))): // Show upload only if no image exists ?>
             <div class="image-upload-container">
                 <input type="file" id="upload-input-<?php echo $item_id_for_js; ?>" 
-                       data-item-id="<?php echo $item_id_for_js; ?>" 
-                       accept="image/*" 
-                       onchange="handleImageUpload(this)">
+                        data-item-id="<?php echo $item_id_for_js; ?>" 
+                        accept="image/*" 
+                        onchange="handleImageUpload(this)">
                 <button class="upload-btn" onclick="document.getElementById('upload-input-<?php echo $item_id_for_js; ?>').click()">
                     Add Image
                 </button>
@@ -338,7 +358,7 @@ $summary_label_colspan = $include_images ? 5 : 4;
   <p><strong>Quotation Validity:</strong> <?php echo htmlspecialchars($quotation['quotation_validity_days']); ?> Days</p>
   
   <div class="signature">
-    <p>For <?php echo htmlspecialchars($company_name); ?></p>
+    <p>For <?php echo htmlspecialchars($display_company_name); ?></p>
     <img src="<?php echo htmlspecialchars($company_signature); ?>" alt="Authorized Signature">
   </div>
 

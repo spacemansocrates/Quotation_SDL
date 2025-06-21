@@ -9,11 +9,11 @@ $comingFromAdmin = isset($_GET['from']) && $_GET['from'] === 'admin';
 if (isset($_SESSION['user_id']) && !$comingFromAdmin) {
     // Redirect admin to admin page, others to a default dashboard (create dashboard.php if needed)
     if ($_SESSION['user_role'] === 'admin') {
-        header('Location: admin_quotations.php');
+        header('Location: index.php');
         exit;
     } else {
         // For staff, redirect to a hypothetical dashboard or show a simple message
-        header('Location: admin_quotations.php'); // Example redirection
+        header('Location: index.php'); // Example redirection
         exit;
     }
 }
@@ -61,10 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Redirect based on role
                         if ($user['role'] === 'admin') {
-                            header('Location: admin_quotations.php');
+                            header('Location: index.php');
                         } else {
                             // All users redirected to admin_quotations.php for now
-                            header('Location: admin_quotations.php');
+                            header('Location: index.php');
                         }
                         DatabaseConfig::closeConnection($pdo);
                         exit; // Important: stop script execution after redirection

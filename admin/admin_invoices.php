@@ -2,18 +2,18 @@
 ob_start();
 session_start();
 
-// Check for user authentication - FIXED to match login.php session variables
+// Check for user authentication
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
     header("Location: login.php");
     exit();
 }
 
 $userId = (int)$_SESSION['user_id'];
-$isAdmin = $_SESSION['user_role'] === 'admin'; // FIXED to match login.php
+$isAdmin = $_SESSION['user_role'] === 'admin';
 
 // Adjust paths if necessary
-require_once __DIR__ . '/../includes/time_formating_helper.php'; // Add this for time formatting functions
-// require_once __DIR__ . '/../includes/invnav.php';
+require_once __DIR__ . '/../includes/time_formating_helper.php';
+// require_once __DIR__ . '/../includes/invnav.php'; // Included in the body
 require_once __DIR__ . '/../includes/db_connect.php'; 
 
 // Get filter parameters
@@ -120,8 +120,8 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        .actions-column {
-            width: 180px;
+        .actions-cell {
+            min-width: 180px; /* Provide enough space for all actions on desktop */
         }
         .filter-section {
             background-color: #f8f9fa;
@@ -136,6 +136,58 @@ try {
         .balance-due {
             font-weight: bold;
         }
+
+        /* Responsive Card Layout for Table on Mobile */
+        @media (max-width: 991.98px) { /* Affects screens smaller than large (tablets and phones) */
+            .table-responsive-cards thead {
+                display: none; /* Hide the original table header */
+            }
+
+            .table-responsive-cards tbody,
+            .table-responsive-cards tr,
+            .table-responsive-cards td {
+                display: block;
+                width: 100%;
+            }
+
+            .table-responsive-cards tr {
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: .375rem;
+            }
+
+            .table-responsive-cards td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: .75rem;
+                text-align: right;
+                border: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .table-responsive-cards tr td:last-child {
+                border-bottom: 0;
+            }
+            
+            /* Add the label before the content */
+            .table-responsive-cards td[data-label]::before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                margin-right: 1rem;
+            }
+            
+            /* Ensure actions are readable and wrap nicely */
+            .table-responsive-cards .actions-cell {
+                padding-bottom: 0;
+            }
+            .table-responsive-cards .actions-wrapper {
+                width: 100%;
+                justify-content: flex-start !important; /* Align actions left in card view */
+                padding: .75rem 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,10 +196,12 @@ try {
     <div class="container-fluid py-4">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <!-- MODIFIED: Added flex-wrap and gap for better stacking on very small screens -->
+                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <h1>Invoices</h1>
                     <a href="create_invoice.php" class="btn btn-primary">
-                        <i class="bi bi-plus-lg"></i> Create New Invoice
+                        <i class="bi bi-plus-lg"></i>
+                        <span class="d-none d-md-inline"> Create New Invoice</span>
                     </a>
                 </div>
             </div>
@@ -160,17 +214,18 @@ try {
         <div class="row">
             <div class="col-12">
                 <div class="filter-section">
-                    <form method="GET" action="" class="row g-3">
-                        <div class="col-md-2">
+                    <!-- MODIFIED: Changed column classes for better responsiveness and added align-items-end -->
+                    <form method="GET" action="" class="row g-3 align-items-end">
+                        <div class="col-sm-6 col-lg-3 col-xl-2">
                             <label for="start_date" class="form-label">Start Date</label>
                             <input type="text" class="form-control datepicker" id="start_date" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-lg-3 col-xl-2">
                             <label for="end_date" class="form-label">End Date</label>
                             <input type="text" class="form-control datepicker" id="end_date" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
                         </div>
                     
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-lg-3 col-xl-2">
                             <label for="customer_id" class="form-label">Customer</label>
                             <select class="form-select" id="customer_id" name="customer_id">
                                 <option value="0">All Customers</option>
@@ -181,7 +236,7 @@ try {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-lg-3 col-xl-2">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
@@ -194,7 +249,7 @@ try {
                             </select>
                         </div>
                         <?php if ($isAdmin): ?>
-                            <div class="col-md-2">
+                            <div class="col-sm-6 col-lg-4 col-xl-2">
                                 <label for="created_by" class="form-label">Created By</label>
                                 <select class="form-select" id="created_by" name="created_by">
                                     <option value="0">All Users</option>
@@ -209,7 +264,7 @@ try {
                                 </select>
                             </div>
                         <?php endif; ?>
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-sm-12 col-md-auto">
                             <button type="submit" class="btn btn-primary">Filter</button>
                             <a href="view_invoices.php" class="btn btn-outline-secondary ms-2">Reset</a>
                         </div>
@@ -221,7 +276,8 @@ try {
         <div class="row">
             <div class="col-12">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <!-- MODIFIED: Added table-responsive-cards class -->
+                    <table class="table table-bordered table-hover table-responsive-cards">
                         <thead class="table-light">
                             <tr>
                                 <th>Invoice #</th>
@@ -236,7 +292,8 @@ try {
                                 <?php if ($isAdmin): ?>
                                     <th>Created By</th>
                                 <?php endif; ?>
-                                <th class="actions-column">Actions</th>
+                                <!-- MODIFIED: Changed class for consistency -->
+                                <th class="actions-cell">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -247,57 +304,36 @@ try {
                             <?php else: ?>
                                 <?php foreach ($invoices as $invoice): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($invoice['invoice_number']); ?></td>
-                                        <td><?php echo date('d M Y', strtotime($invoice['invoice_date'])); ?></td>
-                                        <td>
-                                            <?php if ($invoice['due_date']): ?>
-                                                <?php echo date('d M Y', strtotime($invoice['due_date'])); ?>
-                                            <?php else: ?>
-                                                -
-                                            <?php endif; ?>
+                                        <!-- MODIFIED: Added data-label attributes -->
+                                        <td data-label="Invoice #"><?php echo htmlspecialchars($invoice['invoice_number']); ?></td>
+                                        <td data-label="Date"><?php echo date('d M Y', strtotime($invoice['invoice_date'])); ?></td>
+                                        <td data-label="Due Date">
+                                            <?php echo $invoice['due_date'] ? date('d M Y', strtotime($invoice['due_date'])) : '-'; ?>
                                         </td>
-                                        <td><?php echo htmlspecialchars($invoice['customer_name'] ?? $invoice['customer_name_override'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($invoice['shop_name'] ?? 'N/A'); ?></td>
-                                        <td><?php echo number_format($invoice['total_net_amount'], 2); ?></td>
-                                        <td><?php echo number_format($invoice['total_paid'], 2); ?></td>
-                                        <td class="balance-due">
+                                        <td data-label="Customer"><?php echo htmlspecialchars($invoice['customer_name'] ?? $invoice['customer_name_override'] ?? 'N/A'); ?></td>
+                                        <td data-label="Shop"><?php echo htmlspecialchars($invoice['shop_name'] ?? 'N/A'); ?></td>
+                                        <td data-label="Total"><?php echo number_format($invoice['total_net_amount'], 2); ?></td>
+                                        <td data-label="Paid"><?php echo number_format($invoice['total_paid'], 2); ?></td>
+                                        <td data-label="Balance Due" class="balance-due">
                                             <?php 
                                                 $balance = $invoice['balance_due'];
-                                                $balanceClass = '';
-                                                if ($balance > 0) {
-                                                    $balanceClass = 'text-danger';
-                                                } elseif ($balance == 0) {
-                                                    $balanceClass = 'text-success';
-                                                }
+                                                $balanceClass = $balance > 0 ? 'text-danger' : 'text-success';
                                             ?>
                                             <span class="<?php echo $balanceClass; ?>">
                                                 <?php echo number_format($balance, 2); ?>
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Status">
                                             <?php
                                                 $statusClass = '';
                                                 switch ($invoice['status']) {
-                                                    case 'Draft':
-                                                        $statusClass = 'bg-secondary';
-                                                        break;
-                                                    case 'Sent':
-                                                        $statusClass = 'bg-primary';
-                                                        break;
-                                                    case 'Paid':
-                                                        $statusClass = 'bg-success';
-                                                        break;
-                                                    case 'Partially Paid':
-                                                        $statusClass = 'bg-warning text-dark';
-                                                        break;
-                                                    case 'Overdue':
-                                                        $statusClass = 'bg-danger';
-                                                        break;
-                                                    case 'Cancelled':
-                                                        $statusClass = 'bg-dark';
-                                                        break;
-                                                    default:
-                                                        $statusClass = 'bg-secondary';
+                                                    case 'Draft': $statusClass = 'bg-secondary'; break;
+                                                    case 'Sent': $statusClass = 'bg-primary'; break;
+                                                    case 'Paid': $statusClass = 'bg-success'; break;
+                                                    case 'Partially Paid': $statusClass = 'bg-warning text-dark'; break;
+                                                    case 'Overdue': $statusClass = 'bg-danger'; break;
+                                                    case 'Cancelled': $statusClass = 'bg-dark'; break;
+                                                    default: $statusClass = 'bg-secondary';
                                                 }
                                             ?>
                                             <span class="badge status-badge <?php echo $statusClass; ?>">
@@ -305,10 +341,11 @@ try {
                                             </span>
                                         </td>
                                         <?php if ($isAdmin): ?>
-                                            <td><?php echo htmlspecialchars($invoice['created_by_username']); ?></td>
+                                            <td data-label="Created By"><?php echo htmlspecialchars($invoice['created_by_username']); ?></td>
                                         <?php endif; ?>
-                                        <td class="actions-column">
-                                            <div class="btn-group">
+                                        <!-- MODIFIED: Added wrapper div for responsive actions -->
+                                        <td class="actions-cell" data-label="Actions">
+                                            <div class="btn-group actions-wrapper" role="group">
                                                 <a href="view_invoice_details.php?id=<?php echo $invoice['id']; ?>" class="btn btn-sm btn-outline-primary" title="View">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
@@ -384,60 +421,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const deleteInvoiceModal = document.getElementById('deleteInvoiceModal');
     if (deleteInvoiceModal) {
         deleteInvoiceModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
             const button = event.relatedTarget;
-            
-            // Extract info from data attributes
             const invoiceId = button.getAttribute('data-invoice-id');
             const invoiceNumber = button.getAttribute('data-invoice-number');
-
-            // Update the modal's content
             document.getElementById('invoiceNumberToDelete').textContent = invoiceNumber;
             document.getElementById('invoiceIdInput').value = invoiceId;
         });
     }
 
-    // Handle form submission
- const deleteInvoiceForm = document.getElementById('deleteInvoiceForm');
-if (deleteInvoiceForm) {
-    deleteInvoiceForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        const deleteButton = this.querySelector('button[type="submit"]');
-        
-        // Disable button and show loading state
-        deleteButton.disabled = true;
-        deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
-        
-        fetch('delete_invoice.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Find and remove the table row
-                const invoiceId = formData.get('invoice_id');
-                const rowToRemove = document.querySelector(`button[data-invoice-id="${invoiceId}"]`).closest('tr');
-                if (rowToRemove) {
-                    rowToRemove.remove();
+    // Handle AJAX form submission for deletion
+    const deleteInvoiceForm = document.getElementById('deleteInvoiceForm');
+    if (deleteInvoiceForm) {
+        deleteInvoiceForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const deleteButton = this.querySelector('button[type="submit"]');
+            
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+            
+            fetch('delete_invoice.php', { // Make sure this path is correct
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const invoiceId = formData.get('invoice_id');
+                    const rowToRemove = document.querySelector(`button[data-invoice-id="${invoiceId}"]`).closest('tr');
+                    if (rowToRemove) {
+                        rowToRemove.remove();
+                    }
+                    const modalInstance = bootstrap.Modal.getInstance(deleteInvoiceModal);
+                    modalInstance.hide();
+                } else {
+                    alert('Error deleting invoice: ' + (data.message || 'Unknown error.'));
                 }
-                
-                // Close the modal
-                const modalInstance = bootstrap.Modal.getInstance(deleteInvoiceModal);
-                modalInstance.hide();
-            } else {
-                alert('Error deleting invoice: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An unexpected error occurred.');
-        })
-        .finally(() => {
-            // Reset button state
-            deleteButton.disabled = false;
-            deleteButton.textContent = 'Delete Invoice';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            })
+            .finally(() => {
+                deleteButton.disabled = false;
+                deleteButton.textContent = 'Delete Invoice';
+            });
         });
-    });
-}
+    }
+});
+</script>
+
+</body>
+</html>
