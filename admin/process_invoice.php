@@ -112,50 +112,85 @@ try {
     if ($gross_total_amount === false || $total_net_amount_calc === false) {
         throw new Exception("Invalid total amounts provided.");
     }
+    $lpo_number = filter_input(INPUT_POST, 'lpo_number', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+$lpo_document_path = null; // Default to null
+
+// Check if an LPO document was uploaded and there were no errors
+if (isset($_FILES['lpo_document']) && $_FILES['lpo_document']['error'] === UPLOAD_ERR_OK) {
+    // Define the upload directory
+    $upload_dir = 'uploads/lpos/';
+    if (!is_dir($upload_dir)) {
+        // Create the directory if it doesn't exist. The 'true' allows recursive creation.
+        mkdir($upload_dir, 0775, true);
+    }
+
+    // Create a unique and safe filename to prevent overwrites and security issues
+    $original_filename = basename($_FILES['lpo_document']['name']);
+    $extension = pathinfo($original_filename, PATHINFO_EXTENSION);
+    
+    // Sanitize the base filename to remove potentially harmful characters
+    $safe_base_name = preg_replace("/[^A-Za-z0-9\._-]/", '', pathinfo($original_filename, PATHINFO_FILENAME));
+    
+    // We use customer_id and timestamp to ensure the filename is unique
+    $safe_filename = "lpo_" . $customer_id . "_" . time() . "_" . $safe_base_name . "." . $extension;
+    
+    $lpo_document_path = $upload_dir . $safe_filename;
+
+    // Move the uploaded file to its final destination
+    if (!move_uploaded_file($_FILES['lpo_document']['tmp_name'], $lpo_document_path)) {
+        // If the upload fails, log the error but don't stop the whole process.
+        // The invoice can still be created, just without the LPO document link.
+        error_log("Failed to upload LPO document for customer " . $customer_id);
+        $lpo_document_path = null;
+    }
+}
+// END: Add this new LPO Handling block
 
     // Insert invoice
     $sql_invoice = "INSERT INTO invoices (
-                        invoice_number, shop_id, customer_id, customer_name_override, customer_address_override,
-                        invoice_date, due_date, company_tpin, notes_general, delivery_period, payment_terms,
-                        apply_ppda_levy, ppda_levy_percentage, vat_percentage,
-                        gross_total_amount, ppda_levy_amount, amount_before_vat,
-                        vat_amount, total_net_amount, status, created_by_user_id, updated_by_user_id,
-                        created_at, updated_at
-                    ) VALUES (
-                        :invoice_number, :shop_id, :customer_id, :customer_name_override, :customer_address_override,
-                        :invoice_date, :due_date, :company_tpin, :notes_general, :delivery_period, :payment_terms,
-                        :apply_ppda_levy, :ppda_levy_percentage, :vat_percentage,
-                        :gross_total_amount, :ppda_levy_amount, :amount_before_vat,
-                        :vat_amount, :total_net_amount, :status, :created_by_user_id, :updated_by_user_id,
-                        NOW(), NOW()
-                    )";
-
+                    invoice_number, shop_id, customer_id, customer_name_override, customer_address_override,
+                    lpo_number, lpo_document_path, /* ADDED THESE TWO */
+                    invoice_date, due_date, company_tpin, notes_general, delivery_period, payment_terms,
+                    apply_ppda_levy, ppda_levy_percentage, vat_percentage,
+                    gross_total_amount, ppda_levy_amount, amount_before_vat,
+                    vat_amount, total_net_amount, status, created_by_user_id, updated_by_user_id,
+                    created_at, updated_at
+                ) VALUES (
+                    :invoice_number, :shop_id, :customer_id, :customer_name_override, :customer_address_override,
+                    :lpo_number, :lpo_document_path, /* ADDED THESE TWO */
+                    :invoice_date, :due_date, :company_tpin, :notes_general, :delivery_period, :payment_terms,
+                    :apply_ppda_levy, :ppda_levy_percentage, :vat_percentage,
+                    :gross_total_amount, :ppda_levy_amount, :amount_before_vat,
+                    :vat_amount, :total_net_amount, :status, :created_by_user_id, :updated_by_user_id,
+                    NOW(), NOW()
+                )";
     $stmt_invoice = $conn->prepare($sql_invoice);
-    $stmt_invoice->execute([
-        ':invoice_number' => $invoice_number,
-        ':shop_id' => $shop_id,
-        ':customer_id' => $customer_id,
-        ':customer_name_override' => $customer_name_override,
-        ':customer_address_override' => $customer_address_override,
-        ':invoice_date' => $invoice_date,
-        ':due_date' => $due_date ?: null,
-        ':company_tpin' => $company_tpin,
-        ':notes_general' => $notes_general,
-        ':delivery_period' => $delivery_period,
-        ':payment_terms' => $payment_terms,
-        ':apply_ppda_levy' => $apply_ppda_levy,
-        ':ppda_levy_percentage' => $ppda_levy_percentage,
-        ':vat_percentage' => $vat_percentage,
-        ':gross_total_amount' => $gross_total_amount,
-        ':ppda_levy_amount' => $ppda_levy_amount_calc,
-        ':amount_before_vat' => $amount_before_vat_calc,
-        ':vat_amount' => $vat_amount_calc,
-        ':total_net_amount' => $total_net_amount_calc,
-        ':status' => 'Draft',
-        ':created_by_user_id' => $created_by_user_id,
-        ':updated_by_user_id' => $created_by_user_id
-    ]);
-
+$stmt_invoice->execute([
+    ':invoice_number' => $invoice_number,
+    ':shop_id' => $shop_id,
+    ':customer_id' => $customer_id,
+    ':customer_name_override' => $customer_name_override,
+    ':customer_address_override' => $customer_address_override,
+    ':lpo_number' => $lpo_number,                 // <-- ADD THIS LINE
+    ':lpo_document_path' => $lpo_document_path,   // <-- ADD THIS LINE
+    ':invoice_date' => $invoice_date,
+    ':due_date' => $due_date ?: null,
+    ':company_tpin' => $company_tpin,
+    ':notes_general' => $notes_general,
+    ':delivery_period' => $delivery_period,
+    ':payment_terms' => $payment_terms,
+    ':apply_ppda_levy' => $apply_ppda_levy,
+    ':ppda_levy_percentage' => $ppda_levy_percentage,
+    ':vat_percentage' => $vat_percentage,
+    ':gross_total_amount' => $gross_total_amount,
+    ':ppda_levy_amount' => $ppda_levy_amount_calc,
+    ':amount_before_vat' => $amount_before_vat_calc,
+    ':vat_amount' => $vat_amount_calc,
+    ':total_net_amount' => $total_net_amount_calc,
+    ':status' => 'Draft',
+    ':created_by_user_id' => $created_by_user_id,
+    ':updated_by_user_id' => $created_by_user_id
+]);
     $invoice_id = $conn->lastInsertId();
 
     // Process invoice items

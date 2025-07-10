@@ -401,10 +401,10 @@ $conn->close();
             <section class="kpi-cards">
                 <div class="card">
                     <div class="card-header">
-                        <span>Today's Revenue</span>
+                        <span>dRevenue</span>
                         <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <h2>$<?= number_format($todays_revenue, 2) ?></h2>
+                    <h2>MWK<?= number_format($todays_revenue, 2) ?></h2>
                     <p class="growth <?= $revenue_growth >= 0 ? 'positive' : 'negative' ?>">
                         <i class="fas fa-arrow-<?= $revenue_growth >= 0 ? 'up' : 'down' ?>"></i>
                         <?= number_format(abs($revenue_growth), 1) ?>% vs. yesterday
@@ -493,7 +493,7 @@ $conn->close();
                                 <td><?= htmlspecialchars($invoice['invoice_number']) ?></td>
                                 <td><?= htmlspecialchars($invoice['customer_name']) ?></td>
                                 <td><?= date("M j, Y", strtotime($invoice['invoice_date'])) ?></td>
-                                <td>$<?= number_format($invoice['total_net_amount'], 2) ?></td>
+                                <td>MWK<?= number_format($invoice['total_net_amount'], 2) ?></td>
                             </tr>
                             <?php endforeach; ?>
                             <?php if (empty($recent_invoices)): ?>
@@ -522,7 +522,7 @@ $conn->close();
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['category_name'] ?? 'N/A') ?></td>
                                 <td><?= number_format($product['total_sold']) ?></td>
-                                <td>$<?= number_format($product['total_revenue'], 2) ?></td>
+                                <td>MWK<?= number_format($product['total_revenue'], 2) ?></td>
                             </tr>
                            <?php endforeach; ?>
                            <?php if (empty($top_selling_products)): ?>
@@ -596,7 +596,7 @@ $conn->close();
         // --- All the existing chart-drawing JS code remains here ---
         // ... (omitting for brevity)
         const salesCtx = document.getElementById('salesPerformanceChart').getContext('2d');
-        const salesPerformanceChart = new Chart(salesCtx, { type: 'line', data: { labels: <?= $sales_chart_labels_json ?>, datasets: [{ label: 'Sales ($)', data: <?= $sales_chart_data_json ?>, backgroundColor: 'rgba(54, 69, 79, 0.2)', borderColor: '#36454F', borderWidth: 2, pointBackgroundColor: '#36454F', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return '$' + value; } } } }, plugins: { legend: { display: false } } } });
+        const salesPerformanceChart = new Chart(salesCtx, { type: 'line', data: { labels: <?= $sales_chart_labels_json ?>, datasets: [{ label: 'Sales (MWK)', data: <?= $sales_chart_data_json ?>, backgroundColor: 'rgba(54, 69, 79, 0.2)', borderColor: '#36454F', borderWidth: 2, pointBackgroundColor: '#36454F', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return '$' + value; } } } }, plugins: { legend: { display: false } } } });
         const revenueCtx = document.getElementById('revenueByCategoryChart').getContext('2d');
         const revenueByCategoryChart = new Chart(revenueCtx, { type: 'doughnut', data: { labels: <?= $category_labels_json ?>, datasets: [{ label: 'Revenue', data: <?= $category_data_json ?>, backgroundColor: <?= $category_colors_json ?>, borderColor: 'transparent', cutout: '75%' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return `${context.label}: ${context.raw}%`; } } } } } });
 

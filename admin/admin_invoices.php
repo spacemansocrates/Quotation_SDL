@@ -284,6 +284,7 @@ try {
                                 <th>Date</th>
                                 <th>Due Date</th>
                                 <th>Customer</th>
+                                <th>LPO</th>
                                 <th>Shop</th>
                                 <th>Total Amount</th>
                                 <th>Paid</th>
@@ -299,7 +300,7 @@ try {
                         <tbody>
                             <?php if (empty($invoices)): ?>
                                 <tr>
-                                    <td colspan="<?php echo $isAdmin ? '11' : '10'; ?>" class="text-center py-3">No invoices found.</td>
+                                    <td colspan="<?php echo $isAdmin ? '12' : '11'; ?>" class="text-center py-3">No invoices found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($invoices as $invoice): ?>
@@ -311,6 +312,23 @@ try {
                                             <?php echo $invoice['due_date'] ? date('d M Y', strtotime($invoice['due_date'])) : '-'; ?>
                                         </td>
                                         <td data-label="Customer"><?php echo htmlspecialchars($invoice['customer_name'] ?? $invoice['customer_name_override'] ?? 'N/A'); ?></td>
+                                        <td data-label="LPO">
+    <?php if (!empty($invoice['lpo_number'])): ?>
+        <div class="d-flex align-items-center">
+            <span class="me-2"><?php echo htmlspecialchars($invoice['lpo_number']); ?></span>
+            <?php if (!empty($invoice['lpo_document_path'])): ?>
+                <a href="<?php echo htmlspecialchars($invoice['lpo_document_path']); ?>" 
+                   target="_blank" 
+                   class="btn btn-sm btn-outline-info p-1 lh-1" 
+                   title="View LPO Document">
+                    <i class="bi bi-file-earmark-text"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    <?php else: ?>
+        <span class="text-muted">-</span>
+    <?php endif; ?>
+</td>
                                         <td data-label="Shop"><?php echo htmlspecialchars($invoice['shop_name'] ?? 'N/A'); ?></td>
                                         <td data-label="Total"><?php echo number_format($invoice['total_net_amount'], 2); ?></td>
                                         <td data-label="Paid"><?php echo number_format($invoice['total_paid'], 2); ?></td>

@@ -1,3 +1,4 @@
+
 <?php
 // --- DATABASE CONNECTION ---
 $servername = "localhost";
@@ -12,6 +13,25 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+ob_start();
+session_start();
+
+// FIXED: Enhanced authentication check with admin role verification
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// FIXED: Check if user is admin - redirect if not
+if ($_SESSION['user_role'] !== 'admin') {
+    // Redirect non-admin users to appropriate dashboard or access denied page
+    header("Location: access_denied.php"); // or user_dashboard.php
+    exit();
+}
+
+$userId = (int)$_SESSION['user_id'];
+$isAdmin = true; // We know user is admin at this point
 
 // --- HELPER FUNCTIONS ---
 
@@ -49,23 +69,12 @@ function time_ago($datetime) {
 
     return "just now";
 }
+
 // --- PHP DATA FETCHING FUNCTIONS ---
 
 /**
  * Gets the four main summary statistics for the dashboard cards.
  * Uses subqueries for efficiency in a single DB call.
- */
-/**
- * MODIFIED: Gets summary statistics, now including revenue for this month and last month for comparison.
- * The revenue comparison is based on the `payments` table for accuracy on actual income.
- */
-/**
- * MODIFIED: Gets summary statistics for the new multi-location stock system.
- * It now sums low stock counts from both warehouse_stock and shop_stock.
- */
-/**
- * MODIFIED: Gets summary statistics for the new multi-location stock system.
- * It now sums low stock counts from both warehouse_stock and shop_stock.
  */
 function getSummaryData($conn) {
     $sql = "SELECT
@@ -100,15 +109,13 @@ function getSummaryData($conn) {
         'last_month_revenue' => $data['last_month_revenue'] ?? 0,
     ];
 }
+
 /**
  * Fetches the 5 most recent invoices with customer names.
  */
-/**
- * MODIFIED: Fetches the 5 most recent invoices, now including the invoice ID for linking.
- */
 function getRecentInvoices($conn) {
     $sql = "SELECT
-                i.id as invoice_id, -- THIS LINE IS NEW
+                i.id as invoice_id,
                 i.invoice_number,
                 COALESCE(c.name, i.customer_name_override) as client_name,
                 i.invoice_date,
@@ -128,14 +135,9 @@ function getRecentInvoices($conn) {
     }
     return $invoices;
 }
-/**
- * Fetches up to 5 products that are at or below their minimum stock level.
- */
-/**
- * MODIFIED: Fetches up to 5 products that are low on stock from EITHER warehouses OR shops.
- * It now includes the location name in the results.
 
- * MODIFIED: Fetches up to 5 products that are low on stock from EITHER warehouses OR shops.
+/**
+ * Fetches up to 5 products that are low on stock from EITHER warehouses OR shops.
  * It now includes the location name in the results to be displayed.
  */
 function getLowStockItems($conn) {
@@ -180,11 +182,11 @@ function getLowStockItems($conn) {
     }
     return $items;
 }
+
 /**
- * MODIFIED: Fetches the 5 most recent activities from the log, now including the username.
+ * Fetches the 5 most recent activities from the log, now including the username.
  */
 function getRecentActivity($conn) {
-    // MODIFIED: Added `username_snapshot` to the SELECT statement.
     $sql = "SELECT username_snapshot, action_type, target_entity, description, timestamp
             FROM activity_log
             ORDER BY timestamp DESC
@@ -224,13 +226,14 @@ function getChartData($conn) {
     return ['labels' => $labels, 'data' => $data];
 }
 
-
 // --- FETCH DATA FOR THE VIEW ---
-// Assume a logged-in user with ID 1 for demonstration
-$current_user_id = 1; 
-// In a real app, this would come from a $_SESSION variable after login.
-$user_result = $conn->query("SELECT full_name, role FROM users WHERE id = $current_user_id");
-$user = $user_result->fetch_assoc() ?? ['full_name' => 'Guest', 'role' => 'viewer'];
+// FIXED: Use the actual logged-in user ID from session instead of hardcoded value
+$stmt = $conn->prepare("SELECT full_name, role FROM users WHERE id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$user_result = $stmt->get_result();
+$user = $user_result->fetch_assoc() ?? ['full_name' => 'Guest', 'role' => 'admin'];
+$stmt->close();
 
 $summary = getSummaryData($conn);
 $recentInvoices = getRecentInvoices($conn);
@@ -253,7 +256,7 @@ $chartData = getChartData($conn);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Custom Styles -->
     <style>
         body {
@@ -264,79 +267,78 @@ $chartData = getChartData($conn);
 </head>
 <body class="flex h-screen">
 
-  <!-- Sidebar -->
-<aside id="sidebar" class="w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
-    <div class="p-6">
-        <h1 class="text-2xl font-bold text-gray-800">Supplies Direct</h1>
-    </div>
-    <nav class="mt-6">
-        <ul>
-            <!-- Active link -->
-            <li>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 font-semibold">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-gauge-high fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Dashboard</span>
-                </a>
-            </li>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold text-gray-800">Supplies Direct</h1>
+        </div>
+        <nav class="mt-6">
+            <ul>
+                <!-- Active link -->
+                <li>
+                    <a href="#" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 font-semibold">
+                        <i class="fas fa-gauge-high fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Dashboard</span>
+                    </a>
+                </li>
 
-            <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Finance</li>
-            <li>
-                <a href="admin_invoices.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-file-invoice-dollar fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Invoices</span>
-                </a>
-            </li>
-            <li>
-                <a href="admin_quotations.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-receipt fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Quotations</span>
-                </a>
-            </li>
-            <li>
-                <a href="record_payment.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-credit-card fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Payments</span>
-                </a>
-            </li>
+                <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Finance</li>
+                <li>
+                    <a href="admin_invoices.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-file-invoice-dollar fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Invoices</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_quotations.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-receipt fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Quotations</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="record_payment.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-credit-card fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Payments</span>
+                    </a>
+                </li>
 
-            <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Inventory</li>
-            <li>
-                <a href="admin_products" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-box-archive fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Products</span>
-                </a>
-            </li>
-            <li>
-                <a href="inventory_dashboard.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-warehouse fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Stock Management</span>
-                </a>
-            </li>
-            
-            <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Settings</li>
-            <li>
-                <a href="cust.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-users fa-fw h-5 w-5"></i>
-                    <span class="ml-3">Customers</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
-                    <!-- Replaced SVG with Font Awesome icon -->
-                    <i class="fas fa-gear fa-fw h-5 w-5"></i>
-                    <span class="ml-3">System Settings</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</aside>
+                <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Inventory</li>
+                <li>
+                    <a href="admin_products" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-box-archive fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="inventory_dashboard.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-warehouse fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Stock Management</span>
+                    </a>
+                </li>
+                
+                <li class="mt-4 px-6 text-xs uppercase font-semibold tracking-wider text-gray-500">Settings</li>
+                <li>
+                    <a href="cust.php" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-users fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Customers</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="flex items-center px-6 py-2 text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-gear fa-fw h-5 w-5"></i>
+                        <span class="ml-3">System Settings</span>
+                    </a>
+                </li>
+                <!-- ADDED: Logout link -->
+                <li class="mt-4">
+                    <a href="logout.php" class="flex items-center px-6 py-2 text-red-600 hover:bg-red-50">
+                        <i class="fas fa-sign-out-alt fa-fw h-5 w-5"></i>
+                        <span class="ml-3">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
     <!-- Main Content -->
   <main class="flex-1 overflow-y-auto lg:ml-64">
         <div class="px-6 lg:px-10 py-8">

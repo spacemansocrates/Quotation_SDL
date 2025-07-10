@@ -187,6 +187,11 @@
 
         <div class="form-section" id="optional-data-section">
             <h2>4. Optional Information & Financials</h2>
+            <label for="lpo_number">Customer LPO Number (Optional):</label>
+<input type="text" id="lpo_number" name="lpo_number" placeholder="Enter the LPO number from the customer">
+
+<label for="lpo_document">Upload LPO Document (Optional):</label>
+<input type="file" id="lpo_document" name="lpo_document" accept=".pdf,.jpg,.jpeg,.png">
             <label for="notes_general">General Note:</label>
             <textarea id="notes_general" name="notes_general"></textarea>
 
@@ -515,7 +520,16 @@ document.addEventListener('DOMContentLoaded', function() {
         summaryHTML += `<p><strong>VAT (${document.getElementById('vat_percentage_input_id').value}%):</strong> ${document.getElementById('vat_amount_display').textContent}</p>`;
         summaryHTML += `<p><strong>Total Net Amount:</strong> ${document.getElementById('total_net_amount_display').textContent}</p>`;
 
-        summaryHTML += '<h4>Optional Information:</h4>';
+     summaryHTML += '<h4>Optional Information:</h4>';
+        
+        // --- Start of new/modified code ---
+        const lpoNumber = document.getElementById('lpo_number').value;
+        const lpoFile = document.getElementById('lpo_document').files[0];
+
+        summaryHTML += `<p><strong>LPO Number:</strong> ${lpoNumber || 'N/A'}</p>`;
+        summaryHTML += `<p><strong>LPO Document:</strong> ${lpoFile ? lpoFile.name : 'Not uploaded'}</p>`;
+        // --- End of new/modified code ---
+
         summaryHTML += `<p><strong>General Note:</strong> ${document.getElementById('notes_general').value || 'N/A'}</p>`;
         summaryHTML += `<p><strong>Delivery Period:</strong> ${document.getElementById('delivery_period').value || 'N/A'}</p>`;
         summaryHTML += `<p><strong>Payment Terms:</strong> ${document.getElementById('payment_terms').value || 'N/A'}</p>`;

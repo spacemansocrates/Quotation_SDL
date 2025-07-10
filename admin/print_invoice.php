@@ -12,6 +12,7 @@ if (!$invoice_id) {
 
 // Check if images should be included (from GET parameter)
 $include_images = isset($_GET['include_images']) && $_GET['include_images'] === '1';
+$show_balance = !isset($_GET['show_balance']) || $_GET['show_balance'] !== '0';
 
 // Database connection and queries to fetch invoice data
 try {
@@ -382,17 +383,22 @@ $balance_due = (float)($invoice['balance_due'] ?? ($total_net_amount - $total_pa
   </style>
 </head>
 <body>
-  <div class="print-button-container">
+ <div class="print-button-container">
     <label>
       <input type="checkbox" id="include_images" onchange="toggleImageColumn()" <?php echo $include_images ? 'checked' : ''; ?>> Include Images
     </label>
+    <!-- to show balances -->
+    <label>
+      <input type="checkbox" id="show_balance" onchange="toggleBalanceInfo()" checked> Show Balance
+    </label>
+    <!-- to print -->
     <button onclick="window.print()" class="btn">
       <i class="fas fa-print"></i> Print
     </button>
     <a href="admin_invoices.php" class="btn btn-secondary">
       <i class="fas fa-arrow-left"></i> Back
     </a>
-  </div>
+</div>
 
   <div class="invoice-container">
     <div class="header">
@@ -411,14 +417,22 @@ $balance_due = (float)($invoice['balance_due'] ?? ($total_net_amount - $total_pa
 
     <div class="invoice-title">INVOICE</div>
 
-    <div class="invoice-meta-customer">
-        <div class="invoice-meta">
-            <p><strong>Invoice No:</strong> <?php echo htmlspecialchars($invoice['invoice_number']); ?></p>
-            <p><strong>TPIN No:</strong> <?php echo htmlspecialchars($company_tpin); ?></p>
-            <p><strong>Invoice Date:</strong> <?php echo htmlspecialchars($formatted_date); ?></p>
-            <?php if (!empty($formatted_due_date)): ?>
-            <p><strong>Due Date:</strong> <?php echo htmlspecialchars($formatted_due_date); ?></p>
-            <?php endif; ?>
+   <div class="invoice-meta-customer">
+    <div class="invoice-meta">
+        <p><strong>Invoice No:</strong> <?php echo htmlspecialchars($invoice['invoice_number']); ?></p>
+        <p><strong>TPIN No:</strong> <?php echo htmlspecialchars($company_tpin); ?></p>
+        <p><strong>Invoice Date:</strong> <?php echo htmlspecialchars($formatted_date); ?></p>
+        
+        <!-- START: Add this LPO number block -->
+        <?php if (!empty($invoice['lpo_number'])): ?>
+        <p><strong>Your LPO No:</strong> <?php echo htmlspecialchars($invoice['lpo_number']); ?></p>
+        <?php endif; ?>
+        <!-- END: Add this LPO number block -->
+
+        <?php if (!empty($formatted_due_date)): ?>
+        <p><strong>Due Date:</strong> <?php echo htmlspecialchars($formatted_due_date); ?></p>
+        <?php endif; ?>
+    </div>
         </div>
         <div class="customer-details">
             <strong>Bill To:</strong>
@@ -489,38 +503,43 @@ $balance_due = (float)($invoice['balance_due'] ?? ($total_net_amount - $total_pa
 
     <div class="clearfix">
         <div class="summary-section">
-            <table>
-                <tbody>
-                    <tr class="summary-row">
-                        <td>Gross Total Amount</td>
-                        <td><?php echo number_format($gross_total_amount, 2); ?></td>
-                    </tr>
-                    <?php if ($ppda_levy_amount > 0): ?>
-                    <tr class="summary-row">
-                        <td>PPDA Levy (<?php echo htmlspecialchars($ppda_levy_percentage); ?>%)</td>
-                        <td><?php echo number_format($ppda_levy_amount, 2); ?></td>
-                    </tr>
-                    <?php endif; ?>
-                    <tr class="summary-row">
-                        <td>VAT <?php echo htmlspecialchars($vat_percentage); ?>%</td>
-                        <td><?php echo number_format($vat_amount, 2); ?></td>
-                    </tr>
-                    <tr class="summary-row">
-                        <td>Total Net Amount</td>
-                        <td><?php echo number_format($total_net_amount, 2); ?></td>
-                    </tr>
-                    <tr class="summary-row">
-                        <td>Total Paid</td>
-                        <td><?php echo number_format($total_paid, 2); ?></td>
-                    </tr>
-                    <tr class="summary-row balance-due-row">
-                        <td>Balance Due</td>
-                        <td><strong><?php echo number_format($balance_due, 2); ?></strong></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <table>
+        <tbody>
+            <tr class="summary-row">
+                <td>Gross Total Amount</td>
+                <td><?php echo number_format($gross_total_amount, 2); ?></td>
+            </tr>
+            <?php if ($ppda_levy_amount > 0): ?>
+            <tr class="summary-row">
+                <td>PPDA Levy (<?php echo htmlspecialchars($ppda_levy_percentage); ?>%)</td>
+                <td><?php echo number_format($ppda_levy_amount, 2); ?></td>
+            </tr>
+            <?php endif; ?>
+            <tr class="summary-row">
+                <td>VAT <?php echo htmlspecialchars($vat_percentage); ?>%</td>
+                <td><?php echo number_format($vat_amount, 2); ?></td>
+            </tr>
+            <tr class="summary-row">
+                <td>Total Net Amount</td>
+                <td><?php echo number_format($total_net_amount, 2); ?></td>
+            </tr>
+            
+            <!-- START: Add the conditional wrapper -->
+            <?php if ($show_balance): ?>
+                <tr class="summary-row">
+                    <td>Total Paid</td>
+                    <td><?php echo number_format($total_paid, 2); ?></td>
+                </tr>
+                <tr class="summary-row balance-due-row">
+                    <td>Balance Due</td>
+                    <td><strong><?php echo number_format($balance_due, 2); ?></strong></td>
+                </tr>
+            <?php endif; ?>
+            <!-- END: Add the conditional wrapper -->
+
+        </tbody>
+    </table>
+</div>
 
     <?php if (!empty($invoice['delivery_period'])): ?>
     <p><strong>Delivery Period:</strong> <?php echo htmlspecialchars($invoice['delivery_period']); ?></p>
@@ -547,19 +566,42 @@ $balance_due = (float)($invoice['balance_due'] ?? ($total_net_amount - $total_pa
         }
         window.location.href = currentUrl.toString();
     }
+    function toggleBalanceInfo() {
+    const showBalance = document.getElementById('show_balance').checked;
+    const currentUrl = new URL(window.location.href);
+    // If checked, we remove the param to keep the URL clean (since true is default)
+    // If unchecked, we add show_balance=0
+    if (showBalance) {
+        currentUrl.searchParams.delete('show_balance');
+    } else {
+        currentUrl.searchParams.set('show_balance', '0');
+    }
+    window.location.href = currentUrl.toString();
+}
 
     // On page load, check URL parameters to set checkbox and body class
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const imagesCheckbox = document.getElementById('include_images');
-        if (params.get('include_images') === '1') {
-            if(imagesCheckbox) imagesCheckbox.checked = true;
-            document.body.classList.add('show-images');
-        } else {
-            if(imagesCheckbox) imagesCheckbox.checked = false;
-            document.body.classList.remove('show-images');
-        }
-    });
+ document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Image checkbox logic (existing)
+    const imagesCheckbox = document.getElementById('include_images');
+    if (params.get('include_images') === '1') {
+        if(imagesCheckbox) imagesCheckbox.checked = true;
+        document.body.classList.add('show-images');
+    } else {
+        if(imagesCheckbox) imagesCheckbox.checked = false;
+        document.body.classList.remove('show-images');
+    }
+
+    // --- Start: Add this new balance checkbox logic ---
+    const balanceCheckbox = document.getElementById('show_balance');
+    if (params.get('show_balance') === '0') {
+        if(balanceCheckbox) balanceCheckbox.checked = false;
+    } else {
+        if(balanceCheckbox) balanceCheckbox.checked = true;
+    }
+    // --- End: Add this new balance checkbox logic ---
+});
 
     // Function to handle image upload via AJAX
     async function handleImageUpload(input) {

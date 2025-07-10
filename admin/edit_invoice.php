@@ -131,9 +131,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $invoice) {
         $amount_before_vat_calc = round($gross_total_amount_calc + $ppda_levy_amount_calc, 2);
         $total_net_amount_calc = round($gross_total_amount_calc + $ppda_levy_amount_calc + $vat_amount_calc, 2);
 
-        $sql_update_invoice = "UPDATE invoices SET 
+       $sql_update_invoice = "UPDATE invoices SET 
             shop_id = :shop_id, customer_id = :customer_id, 
             customer_name_override = :cust_name_ovr, customer_address_override = :cust_addr_ovr,
+            lpo_number = :lpo_number, lpo_document_path = :lpo_path, /* ADDED THESE */
             invoice_date = :inv_date, due_date = :due_date, company_tpin = :c_tpin, 
             notes_general = :notes_g, delivery_period = :del_p, payment_terms = :pay_t, 
             apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
@@ -145,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $invoice) {
         $params_update_invoice = [
             ':shop_id' => $shop_id, ':customer_id' => $customer_id,
             ':cust_name_ovr' => $customer_name_override, ':cust_addr_ovr' => $customer_address_override,
+            ':lpo_number' => $lpo_number, ':lpo_path' => $lpo_document_path, /* ADDED THESE */
             ':inv_date' => $invoice_date, ':due_date' => $due_date, ':c_tpin' => $company_tpin,
             ':notes_g' => $notes_general, ':del_p' => $delivery_period, ':pay_t' => $payment_terms,
             ':apply_ppda' => $apply_ppda_levy, ':ppda_perc' => $ppda_levy_percentage, ':vat_perc' => $vat_percentage,
@@ -158,34 +160,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $invoice) {
         DatabaseConfig::executeQuery($pdo, "DELETE FROM invoice_items WHERE invoice_id = :invoice_id", [':invoice_id' => $invoice_id]);
 
         // Insert new/updated items
-        $sql_insert_item = "INSERT INTO invoice_items 
-            (invoice_id, product_id, item_number, description, image_path_override, quantity, unit_of_measurement, rate_per_unit, created_by_user_id, updated_by_user_id) 
-            VALUES (:inv_id, :pid, :item_num, :desc, :img_override, :qty, :uom, :rate, :creator_id, :updater_id)";
+       $sql_insert_item = "INSERT INTO invoice_items 
+            (invoice_id, product_id, item_number, description, image_path_override, quantity, unit_of_measurement, rate_per_unit, total_amount, created_by_user_id, updated_by_user_id) 
+            VALUES (:inv_id, :pid, :item_num, :desc, :img_override, :qty, :uom, :rate, :total_amount, :creator_id, :updater_id)";
 
         foreach ($posted_items as $idx => $item_data) {
             $item_product_id = filter_var($item_data['product_id'], FILTER_VALIDATE_INT) ?: null;
             $item_description = sanitizeString($item_data['description']);
-            if (empty($item_description) && $item_product_id) {
-                foreach($products as $p_lookup) {
-                    if ($p_lookup['id'] == $item_product_id) {
-                        $item_description = $p_lookup['description'];
-                        break;
-                    }
-                }
-            }
+            // ... (rest of the variable assignments are fine) ...
             $item_quantity = filter_var($item_data['quantity'], FILTER_VALIDATE_FLOAT);
             $item_uom = sanitizeString($item_data['unit_of_measurement']);
             $item_rate = filter_var($item_data['rate_per_unit'], FILTER_VALIDATE_FLOAT);
 
             if ($item_quantity !== false && $item_quantity > 0 && $item_rate !== false && $item_rate >= 0) {
+                 // --- START: NEW CALCULATION ---
+                 $item_total_amount = $item_quantity * $item_rate;
+                 // --- END: NEW CALCULATION ---
+
                  DatabaseConfig::executeQuery($pdo, $sql_insert_item, [
                     ':inv_id' => $invoice_id, ':pid' => $item_product_id, ':item_num' => $idx + 1,
                     ':desc' => $item_description, ':img_override' => $item_data['image_path_override'] ?? null,
                     ':qty' => $item_quantity, ':uom' => $item_uom, ':rate' => $item_rate,
+                    ':total_amount' => $item_total_amount, // MODIFIED: Added the calculated total
                     ':creator_id' => $invoice['created_by_user_id'], ':updater_id' => $current_user_id
                 ]);
             }
         }
+
         
         $pdo->commit();
         $_SESSION['success_message'] = "Invoice #" . htmlspecialchars($invoice['invoice_number']) . " updated successfully.";
@@ -344,6 +345,31 @@ if ($pdo) DatabaseConfig::closeConnection($pdo);
                            <textarea class="form-control" id="customer_address_override" name="customer_address_override" rows="3"><?php echo htmlspecialchars($invoice['customer_address_override'] ?? ''); // Corrected ?></textarea>
                         </div>
                     </div>
+                    <hr>
+                    <h5>LPO Details (Optional)</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="lpo_number" class="form-label">Customer LPO Number</label>
+                            <input type="text" class="form-control" id="lpo_number" name="lpo_number" value="<?php echo htmlspecialchars($invoice['lpo_number'] ?? ''); ?>">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lpo_document" class="form-label">LPO Document</label>
+                            <?php if (!empty($invoice['lpo_document_path'])): ?>
+                                <div class="mb-2" id="current-lpo-section">
+                                    Current: 
+                                    <a href="<?php echo htmlspecialchars($invoice['lpo_document_path']); ?>" target="_blank">
+                                        <?php echo basename($invoice['lpo_document_path']); ?>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="delete-lpo-btn">Delete</button>
+                                    <span id="lpo-delete-marker" class="text-danger small" style="display:none;">(Will be deleted on save)</span>
+                                </div>
+                                <input type="hidden" name="delete_lpo_document" id="delete-lpo-input" value="0">
+                            <?php endif; ?>
+                            <input class="form-control" type="file" id="lpo_document" name="lpo_document" accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Uploading a new file will replace the current one.</small>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -637,6 +663,15 @@ if ($pdo) DatabaseConfig::closeConnection($pdo);
             document.querySelectorAll('.select2-item').forEach(el => initializeSelect2(el));
 
             document.querySelectorAll('#invoiceItemsContainer .item-row').forEach(attachItemEventListeners);
+             const deleteLpoBtn = document.getElementById('delete-lpo-btn');
+        if (deleteLpoBtn) {
+            deleteLpoBtn.addEventListener('click', function() {
+                document.getElementById('delete-lpo-input').value = '1';
+                document.getElementById('current-lpo-section').style.textDecoration = 'line-through';
+                document.getElementById('lpo-delete-marker').style.display = 'inline';
+                this.style.display = 'none'; // Hide the delete button
+            });
+        }
             document.getElementById('addItemBtn').addEventListener('click', () => addNewItemRow());
 
             ['apply_ppda_levy', 'ppda_levy_percentage', 'vat_percentage'].forEach(id => {

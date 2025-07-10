@@ -210,25 +210,33 @@ try {
                                         </td>
                                         <td><?php echo htmlspecialchars($invoice['created_by_username']); ?></td>
                                         <td class="actions-column">
-                                            <div class="btn-group action-button-group" id="action-buttons-<?php echo $invoice['id']; ?>">
-                                                <a href="view_invoice.php?id=<?php echo $invoice['id']; ?>" class="btn btn-sm btn-outline-info" title="View Details">
-                                                    <i class="bi bi-eye"></i> View
-                                                </a>
-                                                <?php if (in_array($invoice['status'], ['Draft'])): ?>
-                                                    <button type="button" class="btn btn-sm btn-outline-success send-invoice"
-                                                            data-invoice-id="<?php echo $invoice['id']; ?>"
-                                                            data-invoice-number="<?php echo htmlspecialchars($invoice['invoice_number']); ?>"
-                                                            title="Mark as Sent">
-                                                        <i class="bi bi-send"></i> Mark as Sent
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger cancel-invoice"
-                                                            data-invoice-id="<?php echo $invoice['id']; ?>"
-                                                            data-invoice-number="<?php echo htmlspecialchars($invoice['invoice_number']); ?>"
-                                                            title="Cancel Invoice">
-                                                        <i class="bi bi-x-circle"></i> Cancel
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
+                                          <div class="btn-group action-button-group" id="action-buttons-<?php echo $invoice['id']; ?>">
+    <a href="view_invoice.php?id=<?php echo $invoice['id']; ?>" class="btn btn-sm btn-outline-info" title="View Details">
+        <i class="bi bi-eye"></i> View
+    </a>
+
+    <?php // Allow delivery notes for Sent, Paid, or Partially Paid invoices ?>
+    <?php if (in_array($invoice['status'], ['Sent', 'Partially Paid', 'Paid'])): ?>
+        <a href="create_delivery_note.php?invoice_id=<?php echo $invoice['id']; ?>" class="btn btn-sm btn-outline-primary" title="Generate Delivery Note">
+            <i class="bi bi-truck"></i> Delivery
+        </a>
+    <?php endif; ?>
+    
+    <?php if (in_array($invoice['status'], ['Draft'])): ?>
+        <button type="button" class="btn btn-sm btn-outline-success send-invoice"
+                data-invoice-id="<?php echo $invoice['id']; ?>"
+                data-invoice-number="<?php echo htmlspecialchars($invoice['invoice_number']); ?>"
+                title="Mark as Sent">
+            <i class="bi bi-send"></i> Mark as Sent
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger cancel-invoice"
+                data-invoice-id="<?php echo $invoice['id']; ?>"
+                data-invoice-number="<?php echo htmlspecialchars($invoice['invoice_number']); ?>"
+                title="Cancel Invoice">
+            <i class="bi bi-x-circle"></i> Cancel
+        </button>
+    <?php endif; ?>
+</div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
