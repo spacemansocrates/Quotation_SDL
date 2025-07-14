@@ -1,33 +1,40 @@
 <?php
 // includes/nav.php
 
-// Prevent direct script access.
+// Prevent direct script access for security.
 if (count(get_included_files()) === 1) {
     http_response_code(403);
     die('Direct access not allowed.');
 }
 
 // --- Configuration ---
-// Define which roles can access which pages (lowercase)
+// Define which roles can access which pages (lowercase).
+// This centralized array makes managing permissions straightforward.
 $nav_permissions = [
-    'admin_users.php' => ['admin'],
-    'admin_customers.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
-    'admin_categories.php' => ['admin', 'manager', 'supervisor', 'viewer'],
-    'admin_shops.php' => ['admin'], // Viewer can list
-    'admin_products.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
-    'admin_units.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
-       'admin_quotations.php' => ['admin', 'manager', 'supervisor', 'viewer'], // Viewer can list
-         'admin_manage_quotations.php' => ['admin'], // Viewer can list
-    // Add other pages like 'dashboard.php' here if needed
+    'admin_users.php'        => ['admin'],
+    'admin_shops.php'        => ['admin'],
+    'admin_customers.php'    => ['admin', 'manager', 'supervisor', 'viewer'],
+    'admin_categories.php'   => ['admin', 'manager', 'supervisor', 'viewer'],
+    'admin_products.php'     => ['admin', 'manager', 'supervisor', 'viewer'],
+    'admin_units.php'        => ['admin', 'manager', 'supervisor', 'viewer'],
+    'admin_invoices.php'     => ['admin', 'manager', 'supervisor', 'viewer'], // Formerly quotations
+    'admin_manage_invoices.php' => ['admin'], // High-level invoice management/approval
+    
+    // Example for a dashboard accessible by most roles
     // 'dashboard.php' => ['admin', 'manager', 'supervisor', 'staff', 'viewer'],
 ];
 
-// --- Get current page and user role ---
-$current_page = basename($_SERVER['PHP_SELF']); // Get the filename of the current script
-$user_role = strtolower($_SESSION['user_role'] ?? ''); // Get user role, default to empty string if not set
+// --- Environment Setup ---
+// Get the filename of the current script to highlight the active link.
+$current_page = basename($_SERVER['PHP_SELF']);
 
-// --- Helper function (optional, use htmlspecialchars directly if preferred) ---
-if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewhere
+// Get the user's role from the session, converting to lowercase for consistent checks.
+// The null coalescing operator provides a safe default if the session variable isn't set.
+$user_role = strtolower($_SESSION['user_role'] ?? '');
+
+// --- Helper Function ---
+// A simple helper to escape output, preventing XSS vulnerabilities.
+if (!function_exists('esc_nav')) {
     function esc_nav(string $string): string {
         return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
     }
@@ -45,11 +52,11 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
         <?php endif; ?>
         */ ?>
 
-    <?php if (isset($nav_permissions['admin_shops.php']) && in_array($user_role, $nav_permissions['admin_shops.php'])): ?>
-        <li class="<?php echo ($current_page === 'admin_shops.php') ? 'active' : ''; ?>">
-            <a href="admin_shops.php">Manage Shops</a>
-        </li>
-    <?php endif; ?>
+        <?php if (isset($nav_permissions['admin_shops.php']) && in_array($user_role, $nav_permissions['admin_shops.php'])): ?>
+            <li class="<?php echo ($current_page === 'admin_shops.php') ? 'active' : ''; ?>">
+                <a href="admin_shops.php">Manage Shops</a>
+            </li>
+        <?php endif; ?>
 
         <?php if (isset($nav_permissions['admin_users.php']) && in_array($user_role, $nav_permissions['admin_users.php'])): ?>
             <li class="<?php echo ($current_page === 'admin_users.php') ? 'active' : ''; ?>">
@@ -75,23 +82,26 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
             </li>
         <?php endif; ?>
 
-        <?php // Add more links here following the same pattern ?>
         <?php if (isset($nav_permissions['admin_units.php']) && in_array($user_role, $nav_permissions['admin_units.php'])): ?>
-        <li class="<?php echo ($current_page === 'admin_units.php') ? 'active' : ''; ?>">
-            <a href="admin_units.php">Manage Units</a>
-        </li>
-    <?php endif; ?>
-           <?php if (isset($nav_permissions['admin_quotations.php']) && in_array($user_role, $nav_permissions['admin_quotations.php'])): ?>
-        <li class="<?php echo ($current_page === 'admin_quotations.php') ? 'active' : ''; ?>">
-            <a href="admin_quotations.php">Manage Quotations</a>
-        </li>
-    <?php endif; ?>
-        <?php if (isset($nav_permissions['admin_manage_quotations.php']) && in_array($user_role, $nav_permissions['admin_manage_quotations.php'])): ?>
-        <li class="<?php echo ($current_page === 'admin_manage_quotations.php') ? 'active' : ''; ?>">
-            <a href="admin_manage_quotations.php">Quotations Approval</a>
-        </li>
-    <?php endif; ?>
+            <li class="<?php echo ($current_page === 'admin_units.php') ? 'active' : ''; ?>">
+                <a href="admin_units.php">Manage Units</a>
+            </li>
+        <?php endif; ?>
 
+        <?php // --- Invoice Management Links --- ?>
+        <?php if (isset($nav_permissions['admin_invoices.php']) && in_array($user_role, $nav_permissions['admin_invoices.php'])): ?>
+            <li class="<?php echo ($current_page === 'admin_invoices.php') ? 'active' : ''; ?>">
+                <a href="admin_invoices.php">Manage Invoices</a>
+            </li>
+        <?php endif; ?>
+
+        <?php if (isset($nav_permissions['admin_manage_invoices.php']) && in_array($user_role, $nav_permissions['admin_manage_invoices.php'])): ?>
+            <li class="<?php echo ($current_page === 'admin_manage_invoices.php') ? 'active' : ''; ?>">
+                <a href="admin_manage_invoices.php">Invoice Approval</a>
+            </li>
+        <?php endif; ?>
+
+        <?php // --- User Session Link --- ?>
         <?php if (isset($_SESSION['user_id'])): ?>
             <li class="logout">
                 <a href="logout.php">Logout (<?php echo esc_nav($_SESSION['username']); ?>)</a>
@@ -99,8 +109,11 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
         <?php endif; ?>
     </ul>
 </nav>
-<style>/* Nav Styling - Shadcn-inspired */
 
+<style>
+/* Nav Styling - Shadcn-inspired */
+
+/* Main navigation container */
 .admin-nav {
     background-color: var(--background);
     border-bottom: 1px solid var(--border);
@@ -113,7 +126,7 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
     list-style: none;
     padding: 0;
     margin: 0;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
 }
 
 .admin-nav li {
@@ -127,7 +140,7 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .admin-nav li a:hover {
@@ -135,73 +148,14 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
     background-color: var(--secondary);
 }
 
+/* Active link styling with animated underline */
 .admin-nav li.active {
-    border-bottom: 2px solid var(--primary);
+    position: relative;
 }
 
 .admin-nav li.active a {
     color: var(--primary);
     font-weight: 600;
-}
-
-/* Logout button styling */
-.admin-nav li.logout {
-    margin-left: auto; /* Push to right */
-}
-
-.admin-nav li.logout a {
-    color: var(--muted-foreground);
-    border-left: 1px solid var(--border);
-}
-
-.admin-nav li.logout a:hover {
-    color: var(--destructive);
-    background-color: rgba(239, 68, 68, 0.1);
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-    .admin-nav ul {
-        flex-direction: column;
-    }
-    
-    .admin-nav li {
-        width: 100%;
-    }
-    
-    .admin-nav li.active {
-        border-bottom: none;
-        border-left: 2px solid var(--primary);
-    }
-    
-    .admin-nav li.logout {
-        margin-left: 0;
-        margin-top: 0.5rem;
-        border-top: 1px solid var(--border);
-    }
-    
-    .admin-nav li.logout a {
-        border-left: none;
-    }
-}
-
-/* Role-specific styling for navigation links */
-.role-admin .admin-nav li.admin-only a {
-    position: relative;
-}
-
-.role-admin .admin-nav li.admin-only a::after {
-    content: '•';
-    color: var(--role-admin);
-    position: absolute;
-    right: 0.5rem;
-    top: 0.75rem;
-}
-
-/* Animation for active indicator */
-.admin-nav li.active {
-    position: relative;
-    overflow: hidden;
 }
 
 .admin-nav li.active::after {
@@ -217,14 +171,61 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
 
 @keyframes slideIn {
     from {
-        transform: translateX(-100%);
+        transform: scaleX(0);
     }
     to {
-        transform: translateX(0);
+        transform: scaleX(1);
     }
 }
 
-/* Badge for indicating number of items (optional feature) */
+/* Logout button pushed to the right */
+.admin-nav li.logout {
+    margin-left: auto;
+}
+
+.admin-nav li.logout a {
+    border-left: 1px solid var(--border);
+}
+
+.admin-nav li.logout a:hover {
+    color: var(--destructive);
+    background-color: rgba(239, 68, 68, 0.1); /* Subtle red background on hover */
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 768px) {
+    .admin-nav ul {
+        flex-direction: column;
+    }
+    
+    .admin-nav li {
+        width: 100%;
+    }
+    
+    /* On mobile, use a left border for active state instead of underline */
+    .admin-nav li.active {
+        border-bottom: none;
+        border-left: 3px solid var(--primary);
+    }
+    
+    .admin-nav li.active::after {
+        display: none; /* Hide animated underline on mobile */
+    }
+    
+    .admin-nav li.logout {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .admin-nav li.logout a {
+        border-left: none;
+    }
+}
+
+/* --- Optional Enhancements (from original file) --- */
+
+/* Badge for indicating number of items */
 .admin-nav .badge {
     display: inline-block;
     font-size: 0.75rem;
@@ -234,25 +235,20 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
     background-color: var(--primary);
     color: var(--primary-foreground);
     margin-left: 0.5rem;
+    line-height: 1;
 }
 
-/* Status dot indicators (can be added to links) */
+/* Status dot indicators */
 .status-dot {
     display: inline-block;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     margin-right: 0.5rem;
+    vertical-align: middle;
 }
 
-.status-dot.online {
-    background-color: var(--role-manager);
-}
-
-.status-dot.busy {
-    background-color: var(--role-admin);
-}
-
-.status-dot.away {
-    background-color: var(--role-supervisor);
-}</style>
+.status-dot.online { background-color: #22c55e; } /* green-500 */
+.status-dot.busy { background-color: #ef4444; } /* red-500 */
+.status-dot.away { background-color: #f97316; } /* orange-500 */
+</style>

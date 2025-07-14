@@ -121,8 +121,8 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        .actions-column {
-            width: 150px;
+        .actions-cell {
+            min-width: 220px; /* Provide enough space for all actions on desktop */
         }
         .filter-section {
             background-color: #f8f9fa;
@@ -134,6 +134,59 @@ try {
             font-size: 0.8rem;
             padding: 0.25rem 0.5rem;
         }
+
+        /* Responsive Card Layout for Table on Mobile */
+        @media (max-width: 991.98px) { /* Affects screens smaller than large (tablets and phones) */
+            .table-responsive-cards thead {
+                display: none; /* Hide the original table header */
+            }
+
+            .table-responsive-cards tbody,
+            .table-responsive-cards tr,
+            .table-responsive-cards td {
+                display: block;
+                width: 100%;
+            }
+
+            .table-responsive-cards tr {
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: .375rem;
+            }
+
+            .table-responsive-cards td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: .75rem;
+                text-align: right;
+                border: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .table-responsive-cards tr td:last-child {
+                border-bottom: 0;
+            }
+            
+            /* Add the label before the content */
+            .table-responsive-cards td[data-label]::before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                margin-right: 1rem;
+            }
+
+            /* Ensure actions are readable and wrap nicely */
+            .table-responsive-cards .actions-cell {
+                padding-bottom: 0;
+            }
+            
+            .table-responsive-cards .actions-cell .actions-wrapper {
+                 width: 100%;
+                 justify-content: flex-start; /* Align actions left in card view */
+                 padding: .75rem 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -142,7 +195,8 @@ try {
     <div class="container-fluid py-4">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <!-- MODIFIED: Added flex-wrap and gap for better stacking on very small screens -->
+                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <h1>Quotations</h1>
                     <a href="create_quotation.php" class="btn btn-primary">
                         <i class="bi bi-plus-lg"></i> Create New Quotation
@@ -158,16 +212,17 @@ try {
         <div class="row">
             <div class="col-12">
                 <div class="filter-section">
-                    <form method="GET" action="" class="row g-3">
-                        <div class="col-md-2">
+                    <!-- MODIFIED: Changed column classes for better responsiveness and added align-items-end -->
+                    <form method="GET" action="" class="row g-3 align-items-end">
+                        <div class="col-sm-6 col-md-4 col-xl-2">
                             <label for="start_date" class="form-label">Start Date</label>
                             <input type="text" class="form-control datepicker" id="start_date" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-md-4 col-xl-2">
                             <label for="end_date" class="form-label">End Date</label>
                             <input type="text" class="form-control datepicker" id="end_date" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-md-4 col-xl-2">
                             <label for="customer_id" class="form-label">Customer</label>
                             <select class="form-select" id="customer_id" name="customer_id">
                                 <option value="0">All Customers</option>
@@ -178,7 +233,7 @@ try {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-sm-6 col-md-4 col-xl-2">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
@@ -189,7 +244,7 @@ try {
                             </select>
                         </div>
                         <?php if ($isAdmin): ?>
-                            <div class="col-md-2">
+                            <div class="col-sm-6 col-md-4 col-xl-2">
                                 <label for="created_by" class="form-label">Created By</label>
                                 <select class="form-select" id="created_by" name="created_by">
                                     <option value="0">All Users</option>
@@ -204,7 +259,7 @@ try {
                                 </select>
                             </div>
                         <?php endif; ?>
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-sm-12 col-md-auto">
                             <button type="submit" class="btn btn-primary">Filter</button>
                             <a href="view_quotation.php" class="btn btn-outline-secondary ms-2">Reset</a>
                         </div>
@@ -216,7 +271,8 @@ try {
         <div class="row">
             <div class="col-12">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <!-- MODIFIED: Added table-responsive-cards class to trigger the mobile view CSS -->
+                    <table class="table table-bordered table-hover table-responsive-cards">
                         <thead class="table-light">
                             <tr>
                                 <th>Quotation #</th>
@@ -227,77 +283,97 @@ try {
                                 <?php if ($isAdmin): ?>
                                     <th>Created By</th>
                                 <?php endif; ?>
-                                <th class="actions-column">Actions</th>
+                                <!-- MODIFIED: Combined action columns into one -->
+                                <th class="actions-cell">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($quotations)): ?>
-                                <tr>
-                                    <td colspan="<?php echo $isAdmin ? '7' : '6'; ?>" class="text-center py-3">No quotations found.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($quotations as $quotation): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($quotation['quotation_number']); ?></td>
-                                        <td><?php echo date('d M Y', strtotime($quotation['quotation_date'])); ?></td>
-                                        <td><?php echo htmlspecialchars($quotation['customer_name'] ?? $quotation['customer_name_override'] ?? 'N/A'); ?></td>
-                                        <td><?php echo number_format($quotation['total_net_amount'], 2); ?></td>
-                                        <td>
-                                            <?php
-                                                $statusClass = '';
-                                                switch ($quotation['status']) {
-                                                    case 'Draft':
-                                                        $statusClass = 'bg-secondary';
-                                                        break;
-                                                    case 'Submitted':
-                                                        $statusClass = 'bg-primary';
-                                                        break;
-                                                    case 'Approved':
-                                                        $statusClass = 'bg-success';
-                                                        break;
-                                                    case 'Rejected':
-                                                        $statusClass = 'bg-danger';
-                                                        break;
-                                                    default:
-                                                        $statusClass = 'bg-secondary';
-                                                }
-                                            ?>
-                                            <span class="badge status-badge <?php echo $statusClass; ?>">
-                                                <?php echo htmlspecialchars($quotation['status']); ?>
-                                            </span>
-                                        </td>
-                                        <?php if ($isAdmin): ?>
-                                            <td><?php echo htmlspecialchars($quotation['created_by_username']); ?></td>
-                                        <?php endif; ?>
-                                        <td class="actions-column">
-                                            <div class="btn-group">
-                                                <a href="view_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-primary" title="View">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <?php if ($quotation['status'] === 'Draft' || $isAdmin): ?>
-                                                    <a href="edit_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-secondary" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                                <a href="print_quotation.php?id=<?php echo $quotation['id']; ?>" class="btn btn-sm btn-outline-success" title="Print" target="_blank">
-                                                    <i class="bi bi-printer"></i>
-                                                </a>
-                                                <?php if ($quotation['status'] === 'Draft' && ($isAdmin || $quotation['created_by_user_id'] == $userId)): ?>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-quotation" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteQuotationModal" 
-                                                        data-quotation-id="<?php echo $quotation['id']; ?>"
-                                                        data-quotation-number="<?php echo htmlspecialchars($quotation['quotation_number']); ?>"
-                                                        title="Delete">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+    <?php if (empty($quotations)): ?>
+        <!-- MODIFIED: Colspan updated to reflect the new number of columns -->
+        <tr>
+            <td colspan="<?php echo $isAdmin ? '7' : '6'; ?>" class="text-center py-3">No quotations found.</td>
+        </tr>
+    <?php else: ?>
+        <?php foreach ($quotations as $quotation): ?>
+            <tr>
+                <!-- MODIFIED: Added data-label attribute for responsive view -->
+                <td data-label="Quotation #"><?php echo htmlspecialchars($quotation['quotation_number']); ?></td>
+                <td data-label="Date"><?php echo date('d M Y', strtotime($quotation['quotation_date'])); ?></td>
+                <td data-label="Customer"><?php echo htmlspecialchars($quotation['customer_name'] ?? $quotation['customer_name_override'] ?? 'N/A'); ?></td>
+                <td data-label="Total Amount"><?php echo number_format($quotation['total_net_amount'], 2); ?></td>
+                <td data-label="Status">
+                    <?php
+                        $statusClass = '';
+                        switch ($quotation['status']) {
+                            case 'Draft': $statusClass = 'bg-secondary'; break;
+                            case 'Submitted': $statusClass = 'bg-primary'; break;
+                            case 'Approved': $statusClass = 'bg-success'; break;
+                            case 'Rejected': $statusClass = 'bg-danger'; break;
+                            default: $statusClass = 'bg-secondary';
+                        }
+                    ?>
+                    <span class="badge status-badge <?php echo $statusClass; ?>">
+                        <?php echo htmlspecialchars($quotation['status']); ?>
+                    </span>
+                </td>
+                <?php if ($isAdmin): ?>
+                    <td data-label="Created By"><?php echo htmlspecialchars($quotation['created_by_username']); ?></td>
+                <?php endif; ?>
+                
+                <!-- MODIFIED: Merged both action columns into a single cell with a wrapper for flexbox styling -->
+                <td class="actions-cell" data-label="Actions">
+                    <div class="d-flex flex-wrap justify-content-start justify-content-lg-end gap-1 actions-wrapper">
+                        <!-- Invoice Action -->
+                        <?php if ($quotation['status'] === 'Approved' && is_null($quotation['generated_invoice_id'])): ?>
+                            <a href="create_invoice_from_quote.php?quote_id=<?php echo $quotation['id']; ?>" 
+                               class="btn btn-success btn-sm" title="Create Invoice">
+                                <i class="bi bi-file-earmark-plus"></i>
+                                <span class="d-none d-lg-inline"> Create Invoice</span>
+                            </a>
+                        <?php elseif (!is_null($quotation['generated_invoice_id'])): ?>
+                            <a href="view_invoice.php?id=<?php echo $quotation['generated_invoice_id']; ?>" 
+                               class="btn btn-info btn-sm" title="View Generated Invoice">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span class="d-none d-lg-inline"> Invoice #<?php echo $quotation['generated_invoice_id']; ?></span>
+                            </a>
+                        <?php endif; ?>
+                        
+                        <!-- Standard Actions -->
+                        <div class="btn-group" role="group">
+                            <a href="view_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                               class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            
+                            <?php if ($quotation['status'] === 'Draft' || $isAdmin): ?>
+                                <a href="edit_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                                   class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                             <?php endif; ?>
-                        </tbody>
+                            
+                            <a href="print_quotation.php?id=<?php echo $quotation['id']; ?>" 
+                               class="btn btn-sm btn-outline-success" title="Print" target="_blank">
+                                <i class="bi bi-printer"></i>
+                            </a>
+                            
+                            <?php if ($quotation['status'] === 'Draft' && ($isAdmin || $quotation['created_by_user_id'] == $userId)): ?>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-quotation" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteQuotationModal" 
+                                    data-quotation-id="<?php echo $quotation['id']; ?>"
+                                    data-quotation-number="<?php echo htmlspecialchars($quotation['quotation_number']); ?>"
+                                    title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -316,7 +392,7 @@ try {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteQuotationForm" method="POST" style="display: inline;">
+                <form id="deleteQuotationForm" method="POST" action="ajax_delete_quotation.php" style="display: inline;">
                     <input type="hidden" name="quotation_id" id="quotationIdInput">
                     <button type="submit" class="btn btn-danger">Delete Quotation</button>
                 </form>
@@ -341,20 +417,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const deleteQuotationModal = document.getElementById('deleteQuotationModal');
     if (deleteQuotationModal) {
         deleteQuotationModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
             const button = event.relatedTarget;
-            
-            // Extract info from data attributes
             const quotationId = button.getAttribute('data-quotation-id');
             const quotationNumber = button.getAttribute('data-quotation-number');
 
-            // Update the modal's content
             document.getElementById('quotationNumberToDelete').textContent = quotationNumber;
+            const form = document.getElementById('deleteQuotationForm');
             document.getElementById('quotationIdInput').value = quotationId;
+            // Set the action attribute dynamically to include the ID for non-JS fallback
+            form.action = `ajax_delete_quotation.php?id=${quotationId}`;
         });
     }
 
-    // Handle form submission
+    // Handle AJAX form submission for deletion
     const deleteQuotationForm = document.getElementById('deleteQuotationForm');
     if (deleteQuotationForm) {
         deleteQuotationForm.addEventListener('submit', function(event) {
@@ -362,7 +437,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(this);
             const deleteButton = this.querySelector('button[type="submit"]');
             
-            // Disable button and show loading state
             deleteButton.disabled = true;
             deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
 
@@ -373,26 +447,22 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Find and remove the table row
                     const quotationId = formData.get('quotation_id');
                     const rowToRemove = document.querySelector(`button[data-quotation-id="${quotationId}"]`).closest('tr');
                     if (rowToRemove) {
                         rowToRemove.remove();
                     }
-                    
-                    // Close the modal
                     const modalInstance = bootstrap.Modal.getInstance(deleteQuotationModal);
                     modalInstance.hide();
                 } else {
-                    alert('Error deleting quotation: ' + data.message);
+                    alert('Error deleting quotation: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An unexpected error occurred.');
+                alert('An unexpected error occurred. Please try again.');
             })
             .finally(() => {
-                // Reset button state
                 deleteButton.disabled = false;
                 deleteButton.textContent = 'Delete Quotation';
             });
@@ -400,3 +470,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+</body>
+</html>

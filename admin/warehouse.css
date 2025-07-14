@@ -1,0 +1,470 @@
+    
+        /* ================== Global Styles & Variables ================== */
+        :root {
+            --primary-bg: #F7F8FA;
+            --sidebar-bg: #FFFFFF;
+            --main-content-bg: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --border-color: #EAEBF0;
+            --text-primary: #1A202C;
+            --text-secondary: #718096;
+            --text-light: #A0AEC0;
+            --accent-purple: #805AD5;
+            --green: #48BB78;
+            --orange: #F59E0B;
+            --gray: #A0AEC0;
+            --black: #000000;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+        
+        /* ================== Main Content Area ================== */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ================== Warehouses Sidebar ================== */
+        .warehouses-sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        .warehouses-sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .search-warehouses {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-warehouses i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .search-warehouses input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .btn-add-warehouse {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--black);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .warehouses-nav ul {
+            list-style: none;
+        }
+        
+        .warehouse-item {
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .warehouse-item:hover {
+            background-color: var(--primary-bg);
+        }
+
+        .warehouse-item.active {
+            background-color: #F3F1FD;
+        }
+
+        .warehouse-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background-color: var(--accent-purple);
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .item-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .item-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active { background-color: #C6F6D5; color: #2F855A; }
+        .status-maintenance { background-color: #FEFCBF; color: #B7791F; }
+        .status-inactive { background-color: #E2E8F0; color: #4A5568; }
+
+        .item-count {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ================== Dashboard Content ================== */
+        .dashboard-content {
+            flex-grow: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .header-actions button {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            background-color: var(--sidebar-bg);
+            border-radius: 8px;
+            margin-left: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-actions button:hover {
+            background-color: var(--primary-bg);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .main-dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .view-all-link {
+            text-decoration: none;
+            color: var(--accent-purple);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Transactions Table */
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .transactions-table th, .transactions-table td {
+            text-align: left;
+            padding: 16px 8px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .transactions-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .transactions-table tr:last-child td {
+            border-bottom: none;
+        }
+        .transaction-type {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+            background-color: #EDF2F7;
+            color: #4A5568;
+        }
+        .items-positive { color: var(--green); }
+        .items-negative { color: #E53E3E; }
+        .view-all-transactions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Filter Dropdown */
+        .filter-dropdown select {
+            padding: 6px 30px 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fff;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23A0AEC0' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        /* Inventory Chart */
+        .inventory-distribution .chart-container {
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+        
+        /* Fast Moving Products */
+        .fast-moving-products {
+            margin-top: 24px;
+        }
+        .product-list ul {
+            list-style: none;
+        }
+        .product-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .product-list li:last-child {
+            border-bottom: none;
+        }
+        .product-list .product-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .product-list .product-rate {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .btn-back-dashboard {
+    width: 100%;
+    padding: 12px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px; /* Spacing between buttons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-back-dashboard:hover {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+}
+/* --- Modal Styles --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 25px 30px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #1A202C;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #4A5568;
+}
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #CBD5E0;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important */
+    font-family: 'Inter', sans-serif;
+}
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+.form-group-checkbox label {
+    margin-left: 10px;
+    font-weight: normal;
+    color: #2D3748;
+}
+.form-group button.btn-primary {
+    background-color: #805AD5;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    width: 100%;
+}
+.form-group button.btn-primary:hover {
+    background-color: #6B46C1;
+}
+/* --- Search Results Styles --- */
+.search-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.btn-clear-search {
+    background-color: #E2E8F0;
+    color: #4A5568;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.btn-clear-search:hover {
+    background-color: #CBD5E0;
+}
+.no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #718096;
+    font-size: 1.1em;
+}
+/* Style the search form to take available space */
+.search-warehouses {
+    flex-grow: 1;
+    margin: 0 2rem;
+}

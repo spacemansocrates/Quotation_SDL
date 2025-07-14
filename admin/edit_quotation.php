@@ -3,7 +3,8 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role'])) {
+// Ensure the correct session variable is used for the role check
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['user_role'])) {
     header('Location: login.php'); // Adjust if your login page is elsewhere
     exit();
 }
@@ -16,7 +17,7 @@ $success_message = '';
 $quotation = null;
 $quotation_items_data = []; // For pre-filling the form
 
-$isAdmin = ($_SESSION['role'] === 'admin');
+$isAdmin = ($_SESSION['user_role'] === 'admin');
 $current_user_id = $_SESSION['user_id'];
 
 // Fetch lists for dropdowns
@@ -64,6 +65,10 @@ try {
     error_log("Edit Quotation DB Error: " . $e->getMessage());
 }
 
+// Helper function to sanitize string input (replacement for FILTER_SANITIZE_STRING)
+function sanitizeString($input) {
+    return htmlspecialchars(strip_tags(trim($input)), ENT_QUOTES, 'UTF-8');
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quotation) {
     // --- BEGIN FORM PROCESSING ---
@@ -73,20 +78,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quotation) {
         // Sanitize and retrieve main quotation data
         $shop_id = filter_input(INPUT_POST, 'shop_id', FILTER_VALIDATE_INT);
         $customer_id = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT) ?: null; // Allow null
-        $customer_name_override = trim(filter_input(INPUT_POST, 'customer_name_override', FILTER_SANITIZE_STRING));
-        $customer_address_override = trim(filter_input(INPUT_POST, 'customer_address_override', FILTER_SANITIZE_STRING));
-        $quotation_date = filter_input(INPUT_POST, 'quotation_date', FILTER_SANITIZE_STRING);
+       // $customer_name_override = sanitizeString($_POST['customer_name_override'] ?? '');
+        //$customer_address_override = sanitizeString($_POST['customer_address_override'] ?? '');
+        $quotation_date = sanitizeString($_POST['quotation_date'] ?? '');
         // ... (retrieve all other fields from the form for `quotations` table)
-        $notes_general = trim(filter_input(INPUT_POST, 'notes_general', FILTER_SANITIZE_STRING));
-        $delivery_period = trim(filter_input(INPUT_POST, 'delivery_period', FILTER_SANITIZE_STRING));
-        $payment_terms = trim(filter_input(INPUT_POST, 'payment_terms', FILTER_SANITIZE_STRING));
+        $notes_general = sanitizeString($_POST['notes_general'] ?? '');
+        $delivery_period = sanitizeString($_POST['delivery_period'] ?? '');
+        $payment_terms = sanitizeString($_POST['payment_terms'] ?? '');
         $quotation_validity_days = filter_input(INPUT_POST, 'quotation_validity_days', FILTER_VALIDATE_INT);
-        $company_tpin = trim(filter_input(INPUT_POST, 'company_tpin', FILTER_SANITIZE_STRING));
-        $mra_wht_note_content = trim(filter_input(INPUT_POST, 'mra_wht_note_content', FILTER_SANITIZE_STRING));
+        $company_tpin = sanitizeString($_POST['company_tpin'] ?? '');
+        $mra_wht_note_content = sanitizeString($_POST['mra_wht_note_content'] ?? '');
         $apply_ppda_levy = isset($_POST['apply_ppda_levy']) ? 1 : 0;
         $ppda_levy_percentage = filter_input(INPUT_POST, 'ppda_levy_percentage', FILTER_VALIDATE_FLOAT);
         $vat_percentage = filter_input(INPUT_POST, 'vat_percentage', FILTER_VALIDATE_FLOAT);
-        $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+        $status = sanitizeString($_POST['status'] ?? '');
 
         // Server-side recalculation of totals
         $gross_total_amount_calc = 0;
@@ -112,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quotation) {
 
         // Update Quotation
         $sql_update_quotation = "UPDATE quotations SET 
-            shop_id = :shop_id, customer_id = :customer_id, customer_name_override = :cno, customer_address_override = :cao, 
+            shop_id = :shop_id, customer_id = :customer_id, 
             quotation_date = :q_date, company_tpin = :c_tpin, notes_general = :notes_g, delivery_period = :del_p, 
             payment_terms = :pay_t, quotation_validity_days = :qvd, mra_wht_note_content = :mra, 
             apply_ppda_levy = :apply_ppda, ppda_levy_percentage = :ppda_perc, vat_percentage = :vat_perc, 
@@ -122,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quotation) {
             WHERE id = :quotation_id";
         
         $params_update_quotation = [
-            ':shop_id' => $shop_id, ':customer_id' => $customer_id, ':cno' => $customer_name_override, ':cao' => $customer_address_override,
+            ':shop_id' => $shop_id, ':customer_id' => $customer_id, 
             ':q_date' => $quotation_date, ':c_tpin' => $company_tpin, ':notes_g' => $notes_general, ':del_p' => $delivery_period,
             ':pay_t' => $payment_terms, ':qvd' => $quotation_validity_days, ':mra' => $mra_wht_note_content,
             ':apply_ppda' => $apply_ppda_levy, ':ppda_perc' => $ppda_levy_percentage, ':vat_perc' => $vat_percentage,
@@ -142,9 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quotation) {
 
         foreach ($posted_items as $idx => $item_data) {
             $item_product_id = filter_var($item_data['product_id'], FILTER_VALIDATE_INT) ?: null;
-            $item_description = trim(filter_var($item_data['description'], FILTER_SANITIZE_STRING));
+            $item_description = sanitizeString($item_data['description'] ?? '');
             $item_quantity = filter_var($item_data['quantity'], FILTER_VALIDATE_FLOAT);
-            $item_uom = trim(filter_var($item_data['unit_of_measurement'], FILTER_SANITIZE_STRING));
+            $item_uom = sanitizeString($item_data['unit_of_measurement'] ?? '');
             $item_rate = filter_var($item_data['rate_per_unit'], FILTER_VALIDATE_FLOAT);
             $item_total = $item_quantity * $item_rate;
 
@@ -282,14 +287,17 @@ DatabaseConfig::closeConnection($pdo); // Close connection if opened
                     </div>
                     <p class="text-muted">Or, override customer details below:</p>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="customer_name_override" class="form-label">Customer Name Override</label>
-                            <input type="text" class="form-control" id="customer_name_override" name="customer_name_override" value="<?php echo htmlspecialchars($quotation['customer_name_override']); ?>">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="customer_address_override" class="form-label">Customer Address Override</label>
-                            <textarea class="form-control" id="customer_address_override" name="customer_address_override" rows="3"><?php echo htmlspecialchars($quotation['customer_address_override']); ?></textarea>
-                        </div>
+<!-- For Customer Name Override -->
+<!-- <div class="col-md-6 mb-3">
+    <label for="customer_name_override" class="form-label">Customer Name Override</label>
+    <input type="text" class="form-control" id="customer_name_override" name="customer_name_override" value="<?php// echo htmlspecialchars($quotation['customer_name_override'] ?? ''); ?>">
+</div>
+
+
+<div class="col-md-6 mb-3">
+    <label for="customer_address_override" class="form-label">Customer Address Override</label>
+   <textarea class="form-control" id="customer_address_override" name="customer_address_override" rows="3"><?php //echo htmlspecialchars($quotation['customer_address_override'] ?? ''); ?></textarea>
+</div> -->
                     </div>
                 </div>
             </div>

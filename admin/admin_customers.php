@@ -70,7 +70,7 @@ try {
             $errors = [];
             if (empty($customer_code)) $errors[] = "Customer Code is required.";
             if (empty($name)) $errors[] = "Customer Name is required.";
-            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Valid Email is required.";
+
             // Add more specific validation if needed (e.g., TPIN format, phone format)
 
             if (empty($errors)) {
@@ -290,7 +290,7 @@ try {
 } finally {
     DatabaseConfig::closeConnection($pdo);
 }
-require_once __DIR__ . '/../includes/nav.php';
+require_once __DIR__ . '/../includes/quonav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -343,8 +343,8 @@ require_once __DIR__ . '/../includes/nav.php';
                     <input type="text" id="name" name="name" value="<?php echo esc($form_data['name'] ?? ''); ?>" required>
                 </div>
                  <div>
-                    <label for="email">Email: <span class="required">*</span></label>
-                    <input type="email" id="email" name="email" value="<?php echo esc($form_data['email'] ?? ''); ?>" required>
+                    <label for="email">Email: </label>
+                    <input type="email" id="email" name="email" value="<?php echo esc($form_data['email'] ?? ''); ?>">
                 </div>
                  <div>
                     <label for="phone">Phone:</label>
@@ -427,6 +427,7 @@ require_once __DIR__ . '/../includes/nav.php';
                            <?php if ($can_edit_delete): ?>
                                <td class="actions">
                                    <a href="admin_customers.php?action=edit&id=<?php echo (int)$customer['id']; ?>" class="button-link edit">Edit</a>
+                                  
                                    <!-- Hidden form for delete action -->
                                    <form id="delete-form-<?php echo (int)$customer['id']; ?>" action="admin_customers.php" method="POST" style="display: none;">
                                        <input type="hidden" name="action" value="delete">
