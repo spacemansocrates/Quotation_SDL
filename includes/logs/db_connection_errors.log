@@ -1,0 +1,106 @@
+[2025-07-15 19:16:22] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 20:31:56] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 22:17:09] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 22:18:17] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 22:18:25] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 22:18:37] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-15 22:20:56] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:21:06] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:21:20] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:21:36] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:21:54] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:22:22] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(185): DatabaseConfig::getConnection()
+#2 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-15 22:27:22] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2a02:4780:a::3' (using password: YES)
+Trace: #0 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/includes/db_connect.php(47): PDO->__construct()
+#1 /home/u789944046/domains/peru-dugong-999246.hostingersite.com/public_html/system/Quotation_SDL/index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-16 05:45:30] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2c0f:2a80:2213:c110:2955:a2d4:3d4e:6af4' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(47): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\index.php(53): DatabaseConfig::getConnection()
+#2 {main}
+
+[2025-07-16 05:46:04] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2c0f:2a80:2213:c110:2955:a2d4:3d4e:6af4' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(47): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(185): DatabaseConfig::getConnection()
+#2 C:\wamp64\www\Quotation_SDL2\includes\test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-16 05:50:18] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2c0f:2a80:2213:c110:2955:a2d4:3d4e:6af4' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(47): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(185): DatabaseConfig::getConnection()
+#2 C:\wamp64\www\Quotation_SDL2\includes\test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-16 05:50:21] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'2c0f:2a80:2213:c110:2955:a2d4:3d4e:6af4' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(47): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(185): DatabaseConfig::getConnection()
+#2 C:\wamp64\www\Quotation_SDL2\includes\test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-16 07:23:12] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'137.115.7.181' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(47): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(185): DatabaseConfig::getConnection()
+#2 C:\wamp64\www\Quotation_SDL2\includes\test.php(4): getDatabaseConnection()
+#3 {main}
+
+[2025-07-16 07:29:20] Database Connection Error: SQLSTATE[HY000] [1045] Access denied for user 'u789944046_socrates'@'137.115.7.181' (using password: YES)
+Trace: #0 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(70): PDO->__construct('mysql:host=srv5...', 'u789944046_socr...', Object(SensitiveParameterValue), Array)
+#1 C:\wamp64\www\Quotation_SDL2\includes\db_connect.php(217): DatabaseConfig::getConnection()
+#2 C:\wamp64\www\Quotation_SDL2\includes\test.php(7): getDatabaseConnection()
+#3 {main}
+

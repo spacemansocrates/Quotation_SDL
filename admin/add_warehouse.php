@@ -4,10 +4,10 @@
 /* ========================================================= */
 
 // --- DATABASE CONNECTION ---
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "supplies";
+$servername = "srv582.hstgr.io";
+$username = "u789944046_socrates";
+$password = "Naho1386";
+$dbname = "u789944046_suppliesdirect";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

@@ -94,7 +94,7 @@ if (!function_exists('esc_nav')) { // Prevent redeclaration if included elsewher
 
         <?php if (isset($_SESSION['user_id'])): ?>
             <li class="logout">
-                <a href="logout.php">Logout (<?php echo esc_nav($_SESSION['username']); ?>)</a>
+                <a href="/Quotation_SDL/logout.php">Logout (<?php echo esc_nav($_SESSION['username']); ?>)</a>
             </li>
         <?php endif; ?>
     </ul>

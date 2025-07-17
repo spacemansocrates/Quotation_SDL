@@ -1,9 +1,9 @@
 <?php
 // config.php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'supplies');
+define('DB_HOST', 'srv582.hstgr.io');
+define('DB_USER', 'u789944046_socrates');
+define('DB_PASS', 'Naho1386');
+define('DB_NAME', 'u789944046_suppliesdirect');
 
 // Default values (can be overridden or fetched from a settings table)
 define('DEFAULT_VAT_PERCENTAGE', 16.50);

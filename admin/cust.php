@@ -1,10 +1,11 @@
 <?php
 // --- DATABASE CONNECTION ---
-$dbHost = '127.0.0.1';
-$dbUser = 'root';
-$dbPass = '';
-$dbName = 'supplies';
+$dbHost = 'srv582.hstgr.io';
+$dbUser = 'u789944046_socrates';
+$dbPass = 'Naho1386';
+$dbName = 'u789944046_suppliesdirect';
 $dbPort = 3306;
+
 
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
 if ($conn->connect_error) {

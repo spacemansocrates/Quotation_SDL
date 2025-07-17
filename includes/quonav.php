@@ -10,19 +10,22 @@ if (count(get_included_files()) === 1) {
 // --- Configuration ---
 // Define which roles can access which pages and actions (lowercase).
 $nav_permissions = [
+    // ADDED: Permission for the main admin dashboard link
+    'admin_dashboard.php'  => ['admin'],
+
     // Standard Management Pages
     'admin_shops.php'      => ['admin'],
     'admin_users.php'      => ['admin'],
-    'admin_customers.php'  => ['admin', 'manager', 'supervisor', 'viewer'],
-    'admin_categories.php' => ['admin', 'manager', 'supervisor', 'viewer'],
-    'admin_products.php'   => ['admin', 'manager', 'supervisor', 'viewer'],
-    'admin_units.php'      => ['admin', 'manager', 'supervisor', 'viewer'],
+    'admin_customers.php'  => ['admin', 'manager', 'supervisor', 'staff'], // Changed viewer to staff for consistency
+    'admin_categories.php' => ['admin', 'manager', 'supervisor', 'staff'],
+    'admin_products.php'   => ['admin', 'manager', 'supervisor', 'staff'],
+    'admin_units.php'      => ['admin', 'manager', 'supervisor', 'staff'],
 
     // Pages linked from the Action Buttons
     'admin_invoices.php'   => ['admin', 'manager', 'supervisor'],
-    'admin_quotations.php' => ['admin', 'manager', 'supervisor', 'viewer'],
-    'inventory/'           => ['admin', 'manager', 'supervisor'], // Fixed: removed duplicate
-    'select_customer_for_statement.php' => ['admin', 'manager', 'supervisor'], // Added missing permission
+    'admin_quotations.php' => ['admin', 'manager', 'supervisor', 'staff'],
+    'inventory/'           => ['admin', 'manager', 'supervisor'],
+    'select_customer_for_statement.php' => ['admin', 'manager', 'supervisor'],
 ];
 
 // --- Environment Setup ---
@@ -40,6 +43,15 @@ if (!function_exists('esc_nav')) {
 <nav class="main-nav">
     <!-- Standard navigation links on the left -->
     <ul class="nav-links">
+        
+        <!-- ADDED: Admin Dashboard Link -->
+        <?php if (isset($nav_permissions['admin_dashboard.php']) && in_array($user_role, $nav_permissions['admin_dashboard.php'])): ?>
+            <li class="<?php echo ($current_page === 'admin_dashboard.php') ? 'active' : ''; ?>">
+                <a href="admin_dashboard.php">Dashboard</a>
+            </li>
+        <?php endif; ?>
+        <!-- END ADDED SECTION -->
+
         <?php if (isset($nav_permissions['admin_shops.php']) && in_array($user_role, $nav_permissions['admin_shops.php'])): ?>
             <li class="<?php echo ($current_page === 'admin_shops.php') ? 'active' : ''; ?>">
                 <a href="admin_shops.php">Manage Shops</a>
@@ -97,11 +109,12 @@ if (!function_exists('esc_nav')) {
         
         <?php // Logout always available if logged in ?>
         <?php if (isset($_SESSION['user_id'])): ?>
-             <a href="logout.php" class="nav-button btn-logout">Logout</a>
+            <a href="/Quotation_SDL/logout.php" class="nav-button btn-logout">Logout</a>
         <?php endif; ?>
     </div>
 </nav>
 
+<!-- The <style> block remains exactly the same, no changes needed -->
 <style>
 /* 
   Main Navigation Styling

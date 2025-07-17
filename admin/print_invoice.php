@@ -1,7 +1,8 @@
 <?php
 // print_invoice.php
-// --- (Same data fetching logic as view_invoice_details.php: Get ID, connect to DB, fetch invoice, items, customer, shop) ---
+require_once __DIR__ . '/../includes/db_connect.php'; // Use the modern connector
 
+// 1. Get and validate the Invoice ID
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("No invoice ID specified.");
 }
@@ -10,85 +11,81 @@ if (!$invoice_id) {
     die("Invalid invoice ID.");
 }
 
-// Check if images should be included (from GET parameter)
+// 2. Get display options from URL
 $include_images = isset($_GET['include_images']) && $_GET['include_images'] === '1';
 $show_balance = !isset($_GET['show_balance']) || $_GET['show_balance'] !== '0';
 
-// Database connection and queries to fetch invoice data
-try {
-    $conn = new PDO("mysql:host=localhost;dbname=supplies", "root", ""); // Replace with your actual connection
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$invoice = null;
+$invoice_items = [];
+$company_info = [];
 
-    // Fetch Invoice Details
-    $sql_invoice = "SELECT i.*, 
-                      c.name AS customer_name, c.customer_code, 
-                      c.address_line1 AS customer_address_line1, c.email AS customer_email, c.phone AS customer_phone,
-                      s.name AS shop_name, s.shop_code, 
+// 3. Fetch all data using the modern DatabaseConfig
+try {
+    $pdo = DatabaseConfig::getConnection();
+
+    // Fetch Invoice Details, including the override fields
+    $sql_invoice = "SELECT i.*,
+                      c.name AS customer_name, c.customer_code,
+                      c.address_line1 AS customer_address_line1,
+                      s.name AS shop_name, s.shop_code,
                       u.username AS created_by_username
                       FROM invoices i
                       LEFT JOIN customers c ON i.customer_id = c.id
                       LEFT JOIN shops s ON i.shop_id = s.id
                       LEFT JOIN users u ON i.created_by_user_id = u.id
                       WHERE i.id = :invoice_id";
-    $stmt_invoice = $conn->prepare($sql_invoice);
-    $stmt_invoice->bindParam(':invoice_id', $invoice_id, PDO::PARAM_INT);
-    $stmt_invoice->execute();
+    $stmt_invoice = DatabaseConfig::executeQuery($pdo, $sql_invoice, [':invoice_id' => $invoice_id]);
     $invoice = $stmt_invoice->fetch(PDO::FETCH_ASSOC);
 
-    if (!$invoice) { die("Invoice not found."); }
+    if (!$invoice) {
+        die("Invoice not found.");
+    }
 
     // Fetch Invoice Items
-    $sql_items = "SELECT ii.*, 
-                  p.name as product_name, 
-                  p.sku as product_sku, 
-                  p.default_image_path, /* Fetch default image path from products table */
-                  uom.name as uom_name
+    $sql_items = "SELECT ii.*, p.name as product_name, p.default_image_path
                   FROM invoice_items ii
                   LEFT JOIN products p ON ii.product_id = p.id
-                  LEFT JOIN units_of_measurement uom ON ii.unit_of_measurement = uom.name
-                  WHERE ii.invoice_id = :invoice_id 
+                  WHERE ii.invoice_id = :invoice_id
                   ORDER BY ii.item_number ASC";
-    $stmt_items = $conn->prepare($sql_items);
-    $stmt_items->bindParam(':invoice_id', $invoice_id, PDO::PARAM_INT);
-    $stmt_items->execute();
+    $stmt_items = DatabaseConfig::executeQuery($pdo, $sql_items, [':invoice_id' => $invoice_id]);
     $invoice_items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch Company Information - you may need to create this table
+    // Fetch Company Information
     $sql_company = "SELECT * FROM company_settings WHERE id = 1 LIMIT 1";
-    $stmt_company = $conn->prepare($sql_company);
-    $stmt_company->execute();
+    $stmt_company = DatabaseConfig::executeQuery($pdo, $sql_company);
     $company_info = $stmt_company->fetch(PDO::FETCH_ASSOC);
 
-} catch (PDOException $e) { die("Database error: " . $e->getMessage()); }
-$conn = null;
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+} finally {
+    DatabaseConfig::closeConnection($pdo);
+}
 
-// Company information - replace with database values or define constants
-$company_name = $company_info['company_name'] ?? 'Supplies Direct Limited';
-$company_address = $company_info['address_line1'] ?? 'P.O.BOX NO.5206, LIMBE, MALAWI';
-$company_phone = $company_info['phone'] ?? '0991168991 / 0997398298';
-$company_email = $company_info['email'] ?? 'info@suppliesdirectmw.com';
-$company_tpin = $company_info['tpin'] ?? '70030009';
+// 4. Set display values, prioritizing override fields
+$company_name = $company_info['company_name'] ?? 'Your Company Name';
+$company_address = $company_info['address_line1'] ?? 'Your Company Address';
+$company_phone = $company_info['phone'] ?? 'Your Company Phone';
+$company_email = $company_info['email'] ?? 'your@email.com';
+$company_tpin = $company_info['tpin'] ?? 'Your TPIN';
 $company_logo = $company_info['logo_path'] ?? 'images/logo.png';
 $company_signature = $company_info['signature_path'] ?? 'images/signature.png';
 
-// Format display values
-$display_customer_name = $invoice['customer_name_override'] ?? $invoice['customer_name'];
-$display_customer_address = $invoice['customer_address_override'] ?? $invoice['customer_address_line1'];
+// THIS IS THE FIX FOR THE MISSING CUSTOMER
+$display_customer_name = !empty($invoice['customer_name_override']) ? $invoice['customer_name_override'] : ($invoice['customer_name'] ?? 'N/A');
+$display_customer_address = !empty($invoice['customer_address_override']) ? $invoice['customer_address_override'] : ($invoice['customer_address_line1'] ?? '');
+
 $formatted_date = date('d/m/Y', strtotime($invoice['invoice_date']));
 $formatted_due_date = !empty($invoice['due_date']) ? date('d/m/Y', strtotime($invoice['due_date'])) : '';
 
-// PPDA Levy: Use from DB if explicitly set and numeric. Percentage for display.
-$ppda_levy_amount = (float)($invoice['ppda_levy_amount'] ?? 0);
-$ppda_levy_percentage = (float)($invoice['ppda_levy_percentage'] ?? 0); // For display
-
-// Calculate values for summary section
+// Values for summary section (already correct from invoice table)
 $gross_total_amount = (float)($invoice['gross_total_amount'] ?? 0);
-$vat_percentage = (float)($invoice['vat_percentage'] ?? 16.5);
-$vat_amount = (float)($invoice['vat_amount'] ?? ($gross_total_amount * ($vat_percentage / 100)));
-$total_net_amount = (float)($invoice['total_net_amount'] ?? ($gross_total_amount + $vat_amount + $ppda_levy_amount));
+$ppda_levy_amount = (float)($invoice['ppda_levy_amount'] ?? 0);
+$ppda_levy_percentage = (float)($invoice['ppda_levy_percentage'] ?? 0);
+$vat_percentage = (float)($invoice['vat_percentage'] ?? 0);
+$vat_amount = (float)($invoice['vat_amount'] ?? 0);
+$total_net_amount = (float)($invoice['total_net_amount'] ?? 0);
 $total_paid = (float)($invoice['total_paid'] ?? 0);
-$balance_due = (float)($invoice['balance_due'] ?? ($total_net_amount - $total_paid));
-
+$balance_due = (float)($invoice['balance_due'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html>

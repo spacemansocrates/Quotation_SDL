@@ -1,10 +1,10 @@
 
 <?php
 // --- DATABASE CONNECTION ---
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "supplies";
+$servername = 'srv582.hstgr.io';
+$username = "u789944046_socrates";
+$password = "Naho1386";
+$dbname = "u789944046_suppliesdirect";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -331,7 +331,8 @@ $chartData = getChartData($conn);
                 </li>
                 <!-- ADDED: Logout link -->
                 <li class="mt-4">
-                    <a href="logout.php" class="flex items-center px-6 py-2 text-red-600 hover:bg-red-50">
+                    <a href="/Quotation_SDL/logout.php" class="flex items-center px-6 py-2 text-red-600 hover:bg-red-50">
+                        
                         <i class="fas fa-sign-out-alt fa-fw h-5 w-5"></i>
                         <span class="ml-3">Logout</span>
                     </a>

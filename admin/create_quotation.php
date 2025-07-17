@@ -128,10 +128,10 @@
             <select name="shops[]" id="shops" multiple required>
                 <?php
                     // Database connection
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "supplies";
+                    $servername = "srv582.hstgr.io";
+                    $username = "u789944046_socrates";
+                    $password = "Naho1386";
+                    $dbname = "u789944046_suppliesdirect";
 
                     try {
                         $conn_shops = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
@@ -185,6 +185,15 @@
 
         <div class="form-section" id="items-section">
             <h2>3. Add Items</h2>
+            <!-- START: Added VAT Inclusive Checkbox -->
+<div class="form-check mb-3" style="padding: 10px; background-color: #f0f8ff; border-radius: 4px;">
+    <input type="checkbox" id="prices_are_vat_inclusive" name="prices_are_vat_inclusive" value="1" onchange="calculateOverallTotals()">
+    <label for="prices_are_vat_inclusive" style="display: inline; font-weight: bold;">
+        The rates entered for items below already include VAT.
+    </label>
+    <p style="margin: 5px 0 0 0; font-size: 0.9em;">Check this box if your item prices include the 16.5% VAT. The system will back-calculate the correct pre-VAT rate.</p>
+</div>
+<!-- END: Added VAT Inclusive Checkbox -->
             <div id="items_container">
                 </div>
             <button type="button" id="addItemBtn">Add Item</button>
@@ -468,35 +477,57 @@ function calculateItemTotal(itemRow) {
 }
 
 function calculateOverallTotals() {
-    let grossTotal = 0;
+    const vatPercentageInput = parseFloat(document.getElementById('vat_percentage_input_id').value || 16.5);
+    const vatRate = vatPercentageInput / 100; // e.g., 0.165
+    const vatDivisor = 1 + vatRate; // e.g., 1.165
 
-    // Sum item totals
+    const pricesAreVatInclusive = document.getElementById('prices_are_vat_inclusive').checked;
+
+    let grossTotal = 0; // This will be the sum of pre-VAT totals
+
+    // First, recalculate each item's total based on the VAT-inclusive setting
     document.querySelectorAll('.item-row').forEach(row => {
-        grossTotal += parseFloat(row.querySelector('.item-total').value) || 0;
+        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const priceAsEntered = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+        let itemTotalPreVat = 0;
+
+        if (pricesAreVatInclusive) {
+            // The price entered INCLUDES VAT. We need to find the pre-VAT total.
+            const totalInclusive = quantity * priceAsEntered;
+            itemTotalPreVat = totalInclusive / vatDivisor;
+        } else {
+            // The price entered is already pre-VAT.
+            itemTotalPreVat = quantity * priceAsEntered;
+        }
+        
+        // Update the read-only total field for the user to see the pre-VAT line total
+        row.querySelector('.item-total').value = itemTotalPreVat.toFixed(2);
+        grossTotal += itemTotalPreVat;
     });
 
-    // Display gross total
+    // Now, calculate the grand totals using the pre-VAT grossTotal
     document.getElementById('gross_total_display').textContent = grossTotal.toFixed(2);
 
-    // Check if PPDA levy should be applied
     const applyPPDA = document.getElementById('apply_ppda_levy').checked;
-
-    // Get VAT percentage
-    const vatPercentage = parseFloat(document.getElementById('vat_percentage_input_id')?.value || 16.5) / 100;
-
-    // Calculate PPDA levy
-    let ppdaLevyAmount = applyPPDA ? grossTotal * 0.01 : 0;
+    const ppdaPercentage = 0.01; // Assuming 1%
+    let ppdaLevyAmount = applyPPDA ? grossTotal * ppdaPercentage : 0;
     document.getElementById('ppda_levy_amount_display').textContent = ppdaLevyAmount.toFixed(2);
 
-    // Calculate VAT (only on gross total, NOT on PPDA)
-    const vatAmount = grossTotal * vatPercentage;
+    // This display isn't in your HTML, but let's calculate it correctly
+    // Amount before VAT = Gross Total (which is now pre-VAT)
+    const amountBeforeVat = grossTotal;
+    // This is needed for the summary, even if not displayed live
+    if (document.getElementById('amount_before_vat_display')) {
+        document.getElementById('amount_before_vat_display').textContent = amountBeforeVat.toFixed(2);
+    }
+
+    // VAT is calculated on the pre-VAT gross total
+    const vatAmount = grossTotal * vatRate;
     document.getElementById('vat_amount_display').textContent = vatAmount.toFixed(2);
 
-    // Total Net Amount = Gross + PPDA + VAT
     const totalNetAmount = grossTotal + ppdaLevyAmount + vatAmount;
     document.getElementById('total_net_amount_display').textContent = totalNetAmount.toFixed(2);
-}
-// Initial call if there are pre-loaded items (e.g. when editing)
+}// Initial call if there are pre-loaded items (e.g. when editing)
 // calculateOverallTotals();
 
 // Add these spans in your HTML, in the items section or summary section:

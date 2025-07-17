@@ -30,7 +30,7 @@ function generateInvoiceNumber($conn, $shop_id, $customer_id) {
     $current_month = date('m');
 
     // Base prefix for the invoice number
-    $invoice_prefix = "INV/{$current_year}/{$current_month}/{$shop_code_prefix}/{$customer_code_prefix}-";
+$invoice_prefix = "INV/{$shop_code_prefix}/{$customer_code_prefix}-"; 
 
     // Handle sequence management with proper locking
     $stmt_seq = $conn->prepare("SELECT last_sequence_number FROM invoice_sequences WHERE shop_id = ? AND customer_id = ? FOR UPDATE");

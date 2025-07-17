@@ -414,7 +414,7 @@ require_once __DIR__ . '/../includes/quonav.php';
         <div class="user-info">
              Logged in as: <strong><?php echo esc($_SESSION['username'] ?? 'Guest'); ?></strong>
              (<?php echo esc($_SESSION['user_role'] ?? 'N/A'); ?>)
-             | <a href="logout.php">Logout</a>
+             | <a href="/Quotation_SDL/logout.php">Logout</a>
         </div>
 
         <h1>Manage Products</h1>
