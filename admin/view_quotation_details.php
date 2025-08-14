@@ -9,7 +9,8 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role'])) {
+// Use the same session variable name as the login system
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['user_role'])) {
     header('Location: login.php');
     exit();
 }
@@ -19,7 +20,7 @@ require_once __DIR__ . '/../includes/db_connect.php';
 
 // Get user info from session
 $userId = $_SESSION['user_id'];
-$userRole = $_SESSION['role'];
+$userRole = $_SESSION['user_role'];
 $isAdmin = ($userRole === 'admin');
 
 // Get quotation ID from URL parameter

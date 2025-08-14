@@ -9,7 +9,8 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role'])) {
+// Use the same session key for role as defined during authentication
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['user_role'])) {
     header('Location: login.php');
     exit();
 }
@@ -19,7 +20,7 @@ require_once 'includes/db_connect.php';
 
 // Get user info from session
 $userId = $_SESSION['user_id'];
-$userRole = $_SESSION['role'];
+$userRole = $_SESSION['user_role'];
 $isAdmin = ($userRole === 'admin');
 
 // Get filter parameters
